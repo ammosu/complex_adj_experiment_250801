@@ -1,0 +1,80 @@
+[
+  {
+    "complex_id": "sample_001",
+    "complex_name": "台北都會花園",
+    "county": "台北",
+    "version_count": 6,
+    "min_ratio": 0.95,
+    "max_ratio": 1.25,
+    "absolute_change": 0.30,
+    "relative_change": 0.32,
+    "std_dev": 0.12,
+    "version_data": [
+      {"version": 246, "ratio": 0.95, "complex_name": "台北都會花園", "county": "台北"},
+      {"version": 247, "ratio": 1.08, "complex_name": "台北都會花園", "county": "台北"},
+      {"version": 248, "ratio": 1.15, "complex_name": "台北都會花園", "county": "台北"},
+      {"version": 249, "ratio": 1.25, "complex_name": "台北都會花園", "county": "台北"},
+      {"version": 250, "ratio": 1.12, "complex_name": "台北都會花園", "county": "台北"},
+      {"version": 251, "ratio": 1.05, "complex_name": "台北都會花園", "county": "台北"}
+    ],
+    "period_changes": [
+      {"from_version": 246, "to_version": 247, "absolute_change": 0.13, "relative_change": 0.14},
+      {"from_version": 247, "to_version": 248, "absolute_change": 0.07, "relative_change": 0.06},
+      {"from_version": 248, "to_version": 249, "absolute_change": 0.10, "relative_change": 0.09},
+      {"from_version": 249, "to_version": 250, "absolute_change": 0.13, "relative_change": 0.10},
+      {"from_version": 250, "to_version": 251, "absolute_change": 0.07, "relative_change": 0.06}
+    ]
+  },
+  {
+    "complex_id": "sample_002", 
+    "complex_name": "新北科技園區",
+    "county": "新北",
+    "version_count": 6,
+    "min_ratio": 0.88,
+    "max_ratio": 1.45,
+    "absolute_change": 0.57,
+    "relative_change": 0.65,
+    "std_dev": 0.23,
+    "version_data": [
+      {"version": 246, "ratio": 0.88, "complex_name": "新北科技園區", "county": "新北"},
+      {"version": 247, "ratio": 1.12, "complex_name": "新北科技園區", "county": "新北"},
+      {"version": 248, "ratio": 1.45, "complex_name": "新北科技園區", "county": "新北"},
+      {"version": 249, "ratio": 1.23, "complex_name": "新北科技園區", "county": "新北"},
+      {"version": 250, "ratio": 1.08, "complex_name": "新北科技園區", "county": "新北"},
+      {"version": 251, "ratio": 0.95, "complex_name": "新北科技園區", "county": "新北"}
+    ],
+    "period_changes": [
+      {"from_version": 246, "to_version": 247, "absolute_change": 0.24, "relative_change": 0.27},
+      {"from_version": 247, "to_version": 248, "absolute_change": 0.33, "relative_change": 0.29},
+      {"from_version": 248, "to_version": 249, "absolute_change": 0.22, "relative_change": 0.15},
+      {"from_version": 249, "to_version": 250, "absolute_change": 0.15, "relative_change": 0.12},
+      {"from_version": 250, "to_version": 251, "absolute_change": 0.13, "relative_change": 0.12}
+    ]
+  },
+  {
+    "complex_id": "sample_003",
+    "complex_name": "桃園航空城",
+    "county": "桃園", 
+    "version_count": 6,
+    "min_ratio": 1.02,
+    "max_ratio": 1.18,
+    "absolute_change": 0.16,
+    "relative_change": 0.16,
+    "std_dev": 0.06,
+    "version_data": [
+      {"version": 246, "ratio": 1.02, "complex_name": "桃園航空城", "county": "桃園"},
+      {"version": 247, "ratio": 1.05, "complex_name": "桃園航空城", "county": "桃園"},
+      {"version": 248, "ratio": 1.12, "complex_name": "桃園航空城", "county": "桃園"},
+      {"version": 249, "ratio": 1.18, "complex_name": "桃園航空城", "county": "桃園"},
+      {"version": 250, "ratio": 1.15, "complex_name": "桃園航空城", "county": "桃園"},
+      {"version": 251, "ratio": 1.08, "complex_name": "桃園航空城", "county": "桃園"}
+    ],
+    "period_changes": [
+      {"from_version": 246, "to_version": 247, "absolute_change": 0.03, "relative_change": 0.03},
+      {"from_version": 247, "to_version": 248, "absolute_change": 0.07, "relative_change": 0.07},
+      {"from_version": 248, "to_version": 249, "absolute_change": 0.06, "relative_change": 0.05},
+      {"from_version": 249, "to_version": 250, "absolute_change": 0.03, "relative_change": 0.03},
+      {"from_version": 250, "to_version": 251, "absolute_change": 0.07, "relative_change": 0.06}
+    ]
+  }
+]

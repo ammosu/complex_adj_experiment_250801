@@ -1,0 +1,50 @@
+[
+  {
+    "version": 246,
+    "averageRatio": 1.024,
+    "complexCount": 33012,
+    "totalRatio": 33789.888,
+    "minRatio": 0.652,
+    "maxRatio": 1.852
+  },
+  {
+    "version": 247,
+    "averageRatio": 1.035,
+    "complexCount": 33089,
+    "totalRatio": 34247.115,
+    "minRatio": 0.689,
+    "maxRatio": 1.901
+  },
+  {
+    "version": 248,
+    "averageRatio": 1.041,
+    "complexCount": 33156,
+    "totalRatio": 34511.796,
+    "minRatio": 0.701,
+    "maxRatio": 1.923
+  },
+  {
+    "version": 249,
+    "averageRatio": 1.038,
+    "complexCount": 33198,
+    "totalRatio": 34463.724,
+    "minRatio": 0.695,
+    "maxRatio": 1.887
+  },
+  {
+    "version": 250,
+    "averageRatio": 1.029,
+    "complexCount": 33178,
+    "totalRatio": 34140.062,
+    "minRatio": 0.678,
+    "maxRatio": 1.845
+  },
+  {
+    "version": 251,
+    "averageRatio": 1.032,
+    "complexCount": 33208,
+    "totalRatio": 34286.656,
+    "minRatio": 0.685,
+    "maxRatio": 1.862
+  }
+]

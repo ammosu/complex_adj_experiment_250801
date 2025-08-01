@@ -1,0 +1,74 @@
+[
+  {
+    "county": "新北",
+    "complexCount": 15420,
+    "averageVolatility": 0.18,
+    "maxVolatility": 0.65,
+    "totalVolatility": 2774.6,
+    "stableCount": 12580,
+    "stabilityRatio": 0.816
+  },
+  {
+    "county": "台北", 
+    "complexCount": 8930,
+    "averageVolatility": 0.15,
+    "maxVolatility": 0.45,
+    "totalVolatility": 1339.5,
+    "stableCount": 7650,
+    "stabilityRatio": 0.857
+  },
+  {
+    "county": "桃園",
+    "complexCount": 6210,
+    "averageVolatility": 0.12,
+    "maxVolatility": 0.38,
+    "totalVolatility": 745.2,
+    "stableCount": 5580,
+    "stabilityRatio": 0.899
+  },
+  {
+    "county": "台中",
+    "complexCount": 5890,
+    "averageVolatility": 0.16,
+    "maxVolatility": 0.52,
+    "totalVolatility": 942.4,
+    "stableCount": 4920,
+    "stabilityRatio": 0.835
+  },
+  {
+    "county": "高雄",
+    "complexCount": 4750,
+    "averageVolatility": 0.14,
+    "maxVolatility": 0.41,
+    "totalVolatility": 665.0,
+    "stableCount": 4085,
+    "stabilityRatio": 0.860
+  },
+  {
+    "county": "台南",
+    "complexCount": 3200,
+    "averageVolatility": 0.13,
+    "maxVolatility": 0.35,
+    "totalVolatility": 416.0,
+    "stableCount": 2850,
+    "stabilityRatio": 0.891
+  },
+  {
+    "county": "新竹",
+    "complexCount": 2100,
+    "averageVolatility": 0.19,
+    "maxVolatility": 0.58,
+    "totalVolatility": 399.0,
+    "stableCount": 1680,
+    "stabilityRatio": 0.800
+  },
+  {
+    "county": "苗栗",
+    "complexCount": 1180,
+    "averageVolatility": 0.11,
+    "maxVolatility": 0.28,
+    "totalVolatility": 129.8,
+    "stableCount": 1062,
+    "stabilityRatio": 0.900
+  }
+]

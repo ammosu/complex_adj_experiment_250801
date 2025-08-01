@@ -111,11 +111,23 @@ class ModernDataManager {
             } catch (remoteError) {
                 console.warn('⚠️ 遠端縣市統計生成失敗，嘗試本地JSON:', remoteError);
                 // Fallback to local JSON
-                const response = await fetch('data/county_stats.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                try {
+                    const response = await fetch('data/county_stats.json');
+                    if (response.ok) {
+                        data = await response.json();
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (localError) {
+                    console.warn('⚠️ 本地縣市統計載入失敗，嘗試樣本數據:', localError);
+                    const sampleResponse = await fetch('data/sample_county_stats.json');
+                    if (sampleResponse.ok) {
+                        data = await sampleResponse.json();
+                        console.log('✅ 載入樣本縣市統計成功');
+                    } else {
+                        throw new Error('所有縣市統計數據源都失敗');
+                    }
                 }
-                data = await response.json();
             }
             this.data.countyStats = data;
             this.cache.set('countyStats', data);
@@ -151,11 +163,23 @@ class ModernDataManager {
             } catch (remoteError) {
                 console.warn('⚠️ 遠端版本趨勢生成失敗，嘗試本地JSON:', remoteError);
                 // Fallback to local JSON
-                const response = await fetch('data/version_trends.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                try {
+                    const response = await fetch('data/version_trends.json');
+                    if (response.ok) {
+                        data = await response.json();
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (localError) {
+                    console.warn('⚠️ 本地版本趨勢載入失敗，嘗試樣本數據:', localError);
+                    const sampleResponse = await fetch('data/sample_version_trends.json');
+                    if (sampleResponse.ok) {
+                        data = await sampleResponse.json();
+                        console.log('✅ 載入樣本版本趨勢成功');
+                    } else {
+                        throw new Error('所有版本趨勢數據源都失敗');
+                    }
                 }
-                data = await response.json();
             }
             this.data.versionTrends = data;
             this.cache.set('versionTrends', data);

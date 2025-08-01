@@ -49,6 +49,11 @@ class RemoteDataLoader {
         this.isLoading = true;
         
         try {
+            if (!this.S3_CSV_URL) {
+                console.warn('⚠️ 未設定數據源URL，使用備案數據');
+                return this.loadFallbackData();
+            }
+            
             console.log('🌐 從S3載入數據:', this.S3_CSV_URL);
             
             // 顯示載入進度
@@ -341,16 +346,31 @@ class RemoteDataLoader {
      */
     async loadFallbackData() {
         try {
-            // 嘗試載入已存在的JSON文件
+            // 嘗試載入主要分析數據
             const response = await fetch('./data/complex_changes.json');
             if (response.ok) {
-                return await response.json();
+                const data = await response.json();
+                console.log('✅ 載入本地JSON數據成功');
+                return data;
             }
         } catch (e) {
-            console.log('本地JSON也無法載入，使用內建樣本');
+            console.log('⚠️ 主要JSON載入失敗:', e.message);
+        }
+
+        try {
+            // 嘗試載入樣本數據
+            const response = await fetch('./data/sample_complex_changes.json');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ 載入樣本JSON數據成功');
+                return data;
+            }
+        } catch (e) {
+            console.log('⚠️ 樣本JSON載入失敗:', e.message);
         }
 
         // 返回最小樣本數據
+        console.log('📝 生成內建樣本數據');
         return this.generateMinimalSampleData();
     }
 
@@ -377,7 +397,7 @@ class RemoteDataLoader {
             const maxRatio = Math.max(...ratios);
 
             sampleData.push({
-                complex_id: `sample_${i:04d}`,
+                complex_id: `sample_${i.toString().padStart(4, '0')}`,
                 complex_name: `樣本社區${i + 1}`,
                 county: counties[i % counties.length],
                 version_count: 6,

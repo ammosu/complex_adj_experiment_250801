@@ -286,6 +286,16 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- Environment Configuration -->
+    <script>
+        // 臨時測試：設定環境變數（生產環境請在 Render 設定）
+        if (!window.HOUSING_DATA_URL && !localStorage.getItem('HOUSING_DATA_URL')) {
+            console.log('🔧 使用臨時測試數據源');
+            // 您可以在此設定測試URL，或在 Render Dashboard 設定環境變數
+            // window.HOUSING_DATA_URL = 'https://your-bucket.s3.amazonaws.com/your-file.csv';
+        }
+    </script>
+    
     <!-- Remote Data Loader -->
     <script src="js/remote-data-loader.js"></script>
     
