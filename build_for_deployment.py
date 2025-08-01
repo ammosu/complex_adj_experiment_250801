@@ -94,7 +94,8 @@ def run_analysis(data_file):
         result = subprocess.run([
             sys.executable, 'detailed_analysis.py',
             '--input', data_file,
-            '--output-json', 'dashboard/data/detailed_stats.json'
+            '--output-format', 'json',
+            '--output-dir', 'dashboard/data'
         ], capture_output=True, text=True)
         
         if result.returncode == 0:
