@@ -26,22 +26,14 @@ RUN python setup.py
 EXPOSE 8000
 
 # 創建啟動腳本
-RUN echo '#!/bin/bash
-\
-echo "🏠 住宅社區調整率分析系統"
-\
-echo "正在初始化數據..."
-\
-python3 build_for_deployment.py
-\
-echo "數據初始化完成"
-\
-echo "正在啟動前端服務..."
-\
-cd dashboard
-\
-python -m http.server 8000 --bind 0.0.0.0
-\
+RUN echo '#!/bin/bash\n\
+echo "🏠 住宅社區調整率分析系統"\n\
+echo "正在初始化數據..."\n\
+python3 build_for_deployment.py\n\
+echo "數據初始化完成"\n\
+echo "正在啟動前端服務..."\n\
+cd dashboard\n\
+python -m http.server 8000 --bind 0.0.0.0\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # 默認命令
