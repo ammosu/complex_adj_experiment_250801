@@ -177,7 +177,7 @@ class ModernDashboard {
                 icon: 'fas fa-calculator',
                 value: summaryStats.avgAdjustmentRate.toFixed(3),
                 label: '平均調整率',
-                trend: null,
+                trend: '<a href="calculation-info.html" target="_blank" class="text-decoration-none small">查看計算方法 <i class="fas fa-external-link-alt"></i></a>',
                 color: 'info'
             }
         ];

@@ -103,7 +103,19 @@ class ModernChartManager {
                             font: {
                                 size: 16,
                                 weight: 'bold'
+                            },
+                            onClick: () => {
+                                window.open('calculation-info.html#trend-analysis', '_blank');
                             }
+                        },
+                        subtitle: {
+                            display: true,
+                            text: '計算方法：平均值 = Σ(調整率) / 樣本數  |  點擊標題查看詳細公式',
+                            font: {
+                                size: 11,
+                                style: 'italic'
+                            },
+                            color: '#6b7280'
                         },
                         legend: {
                             display: true,
@@ -234,11 +246,23 @@ class ModernChartManager {
                     plugins: {
                         title: {
                             display: true,
-                                text: '相對變化分布圖',
+                            text: '相對變化分布圖',
                             font: {
                                 size: 16,
                                 weight: 'bold'
+                            },
+                            onClick: () => {
+                                window.open('calculation-info.html#change-analysis', '_blank');
                             }
+                        },
+                        subtitle: {
+                            display: true,
+                            text: '計算方法：相對變化 = |當期 - 前期| / 前期 × 100%',
+                            font: {
+                                size: 11,
+                                style: 'italic'
+                            },
+                            color: '#6b7280'
                         },
                         legend: {
                             display: false
@@ -365,7 +389,19 @@ class ModernChartManager {
                             font: {
                                 size: 16,
                                 weight: 'bold'
+                            },
+                            onClick: () => {
+                                window.open('calculation-info.html#basic-metrics', '_blank');
                             }
+                        },
+                        subtitle: {
+                            display: true,
+                            text: 'X軸：絕對變化 = |最大值 - 最小值| | Y軸：相對變化 = 絕對變化 / 最小值',
+                            font: {
+                                size: 11,
+                                style: 'italic'
+                            },
+                            color: '#6b7280'
                         },
                         legend: {
                             display: true,
