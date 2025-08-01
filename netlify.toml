@@ -1,0 +1,13 @@
+
+[build]
+  publish = "dashboard"
+
+[[redirects]]
+  from = "/"
+  to = "/index_modern.html"
+  status = 200
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

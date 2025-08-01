@@ -1,0 +1,139 @@
+# ====================
+# 住宅社區調整率分析系統 .gitignore
+# ====================
+
+# 大型原始數據文件 (不要提交到Git)
+*.csv
+!sample_data.csv  # 允許小型樣本數據
+*.xlsx
+*.xls
+
+# 數據備份目錄
+data_backup/
+backup/
+
+# 生成的分析結果文件 (運行時生成)
+dashboard/data/*.json
+!dashboard/data/.gitkeep  # 保留目錄結構
+dashboard/data/*.geojson
+!dashboard/data/sample_*.json  # 允許小型樣本文件
+!dashboard/data/taiwan_map.geojson  # 台灣地圖檔案可保留(小於3KB)
+
+# Python 相關
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 虛擬環境
+.venv/
+venv/
+.env
+.ENV
+env/
+ENV/
+
+# IDE 和編輯器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 日誌文件
+*.log
+logs/
+dashboard/server.log
+
+# 臨時文件
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# 測試和快取
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Claude 和 Serena 本地設置
+.claude/
+.serena/
+*.local.json
+
+# 開發過程文檔和測試文件 (不需要推送)
+PRPs/
+CHART_FIXES_README.md
+DEPLOYMENT_README.md
+GIT_PUSH_GUIDE.md
+MODERN_DASHBOARD_README.md
+complex_ids.md
+analysis_summary.txt
+
+# 測試和調試文件
+*test*.py
+*test*.html
+*debug*.html
+*syntax*.html
+*check*.py
+dashboard/final_test.html
+dashboard/simple_test.html
+dashboard/quick_test.html
+dashboard/debug.html
+dashboard/syntax_test.html
+
+# 舊版本文件 (保留現代化版本)
+dashboard/index.html
+dashboard/index_old.html
+dashboard/js/main.js
+dashboard/js/data-manager.js
+dashboard/js/charts.js
+dashboard/js/map.js
+
+# 部署相關文件 (保留)
+!vercel.json
+!netlify.toml
+!deploy_instructions.md
+!build_for_deployment.py
+
+# 系統和備份文件
+.DS_Store
+*.bak
+*.backup
+*~
+
+# Node.js (如果之後加入)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 部署相關
+.deployment/
+deploy.sh.local
+config.local.*

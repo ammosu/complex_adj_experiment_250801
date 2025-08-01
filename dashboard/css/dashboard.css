@@ -1,0 +1,396 @@
+/* Dashboard Specific Styles */
+
+/* Chart Containers */
+.chart-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.chart-container h5 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+/* Filter Panel */
+.filter-panel {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #dee2e6;
+}
+
+.filter-panel h5 {
+    color: #495057;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.filter-panel .form-label {
+    font-weight: 500;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+/* Summary Cards */
+.summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+}
+
+.summary-card h5 {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.summary-card h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: white;
+}
+
+.summary-card small {
+    opacity: 0.8;
+    font-size: 0.8rem;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 0;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 12px 20px;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #667eea;
+    background-color: #f8f9fa;
+}
+
+.nav-tabs .nav-link.active {
+    color: #667eea;
+    background-color: white;
+    border-bottom: 2px solid #667eea;
+    font-weight: 600;
+}
+
+.tab-content {
+    background: white;
+    border-radius: 0 12px 12px 12px;
+    padding: 0;
+}
+
+/* Map Styles */
+#map {
+    height: 500px;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.map-popup {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.map-popup h6 {
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.map-popup hr {
+    margin: 8px 0;
+    border-color: #dee2e6;
+}
+
+.map-popup p {
+    margin-bottom: 4px;
+}
+
+.map-popup ul {
+    margin-bottom: 0;
+}
+
+.map-legend {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.loading-spinner .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 16px;
+}
+
+/* D3 Chart Styles */
+.d3-chart svg {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.d3-chart .axis {
+    font-size: 12px;
+}
+
+.d3-chart .axis-label {
+    font-size: 14px;
+    font-weight: 500;
+    fill: #495057;
+}
+
+.d3-chart .grid line {
+    stroke: #e9ecef;
+    stroke-dasharray: 2,2;
+}
+
+.d3-chart .tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Chart.js Customizations */
+.chartjs-render-monitor {
+    border-radius: 8px;
+}
+
+/* Complex Selector */
+#complex-selector {
+    max-height: 200px;
+    font-size: 14px;
+}
+
+#complex-selector option {
+    padding: 8px;
+}
+
+/* Export Button */
+#export-data {
+    position: relative;
+}
+
+#export-data:after {
+    content: '⬇';
+    margin-left: 8px;
+}
+
+/* Error States */
+.error-message {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .chart-container {
+        padding: 20px;
+    }
+    
+    .summary-card h2 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .filter-panel {
+        padding: 20px;
+    }
+    
+    .filter-panel .row > .col-md-3 {
+        margin-bottom: 16px;
+    }
+    
+    #map {
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .filter-panel {
+        padding: 16px;
+    }
+    
+    .summary-card {
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    
+    .summary-card h2 {
+        font-size: 1.8rem;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    #map {
+        height: 300px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    .chart-container {
+        padding: 12px;
+    }
+    
+    .filter-panel {
+        padding: 12px;
+    }
+    
+    .summary-card {
+        padding: 16px;
+    }
+    
+    .summary-card h2 {
+        font-size: 1.5rem;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1a1a;
+        color: #e9ecef;
+    }
+    
+    .chart-container {
+        background-color: #2d3748;
+        color: #e9ecef;
+    }
+    
+    .filter-panel {
+        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+        border-color: #4a5568;
+    }
+    
+    .form-control, .form-select {
+        background-color: #4a5568;
+        border-color: #6c757d;
+        color: #e9ecef;
+    }
+    
+    .nav-tabs {
+        border-bottom-color: #4a5568;
+    }
+    
+    .nav-tabs .nav-link {
+        color: #a0aec0;
+    }
+    
+    .nav-tabs .nav-link.active {
+        background-color: #2d3748;
+        color: #667eea;
+    }
+    
+    .tab-content {
+        background-color: #2d3748;
+    }
+}
+
+/* Accessibility Improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus Styles */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.nav-link:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .chart-container {
+        border: 2px solid #000;
+    }
+    
+    .btn {
+        border: 2px solid #000;
+    }
+    
+    .summary-card {
+        border: 2px solid #000;
+    }
+}

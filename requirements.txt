@@ -1,0 +1,11 @@
+# 住宅社區調整率分析系統 - Python 依賴
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+jupyter>=1.0.0
+
+# 可選：進階分析工具
+# scikit-learn>=1.3.0  # 如需機器學習功能
+# plotly>=5.15.0       # 如需互動式圖表

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣住宅社區調整率分析平台</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link href="css/modern-dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-home me-2"></i>
+                台灣住宅社區調整率分析平台
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#overview">總覽</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#geographic">地理分析</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#trends">趨勢分析</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#search">社區搜尋</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            <p class="mt-3 text-muted">正在載入數據...</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid mt-4">
+        <!-- Dashboard Grid Layout -->
+        <div class="dashboard-grid">
+            <!-- KPI Cards Section -->
+            <section id="kpi-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-line me-2"></i>
+                        關鍵指標概覽
+                    </h2>
+                </div>
+                <div class="row g-3" id="kpiCards">
+                    <!-- KPI cards will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Geographic Analysis Section -->
+            <section id="geographic-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-map-marked-alt me-2"></i>
+                        地理分布分析
+                    </h2>
+                    <div class="section-controls">
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="mapMode" id="mapModeAbsolute" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary btn-sm" for="mapModeAbsolute">絕對變化</label>
+                            
+                            <input type="radio" class="btn-check" name="mapMode" id="mapModeRelative" autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm" for="mapModeRelative">相對變化</label>
+                            
+                            <input type="radio" class="btn-check" name="mapMode" id="mapModeStability" autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm" for="mapModeStability">穩定性</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-lg-8">
+                        <div class="card h-100">
+                            <div class="card-body p-0">
+                                <div id="taiwanMap" class="taiwan-map"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">縣市統計排名</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="countyRanking" class="county-ranking">
+                                    <!-- County ranking will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Time Series Analysis Section -->
+            <section id="trends-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-area me-2"></i>
+                        時間序列分析
+                    </h2>
+                    <div class="section-controls">
+                        <select class="form-select form-select-sm" id="trendAnalysisType">
+                            <option value="overall">整體趨勢</option>
+                            <option value="county">縣市比較</option>
+                            <option value="complex">社區追蹤</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="trendsChart" class="chart-container">
+                                    <!-- Trends chart will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Search and Details Section -->
+            <section id="search-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-search me-2"></i>
+                        社區搜尋與分析
+                    </h2>
+                </div>
+                <div class="row g-3">
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">智能搜尋</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="search-controls">
+                                    <div class="mb-3">
+                                        <label for="complexSearch" class="form-label">社區名稱</label>
+                                        <input type="text" class="form-control" id="complexSearch" 
+                                               placeholder="輸入社區名稱進行搜尋...">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="countyFilter" class="form-label">縣市篩選</label>
+                                        <select class="form-select" id="countyFilter" multiple>
+                                            <!-- Counties will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="volatilityRange" class="form-label">
+                                            波動範圍: <span id="volatilityValue">0.1</span>
+                                        </label>
+                                        <input type="range" class="form-range" id="volatilityRange" 
+                                               min="0" max="1" step="0.01" value="0.1">
+                                    </div>
+                                    
+                                    <button class="btn btn-primary w-100" id="searchButton">
+                                        <i class="fas fa-search me-1"></i>搜尋
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-8">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">搜尋結果</h5>
+                                <div class="result-controls">
+                                    <button class="btn btn-outline-secondary btn-sm" id="exportResults">
+                                        <i class="fas fa-download me-1"></i>導出
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="searchResults" class="search-results">
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-search fa-3x mb-3"></i>
+                                        <p>請使用左側搜尋功能查找社區資料</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistical Analysis Section -->
+            <section id="statistics-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        統計分析
+                    </h2>
+                </div>
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">調整率分布圖</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="distributionChart" class="chart-container">
+                                    <!-- Distribution chart will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">波動性散點圖</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="scatterChart" class="chart-container">
+                                    <!-- Scatter chart will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Complex Detail Modal -->
+    <div class="modal fade" id="complexDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="complexDetailModalLabel">社區詳細資訊</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="complexDetailContent">
+                    <!-- Complex details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-primary" id="addToComparison">加入比較</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" onerror="loadChartJSFallback()"></script>
+    <script>
+        function loadChartJSFallback() {
+            console.warn('Primary Chart.js CDN failed, trying fallback...');
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js';
+            document.head.appendChild(script);
+        }
+    </script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/modern-data-manager.js"></script>
+    <script src="js/modern-charts.js"></script>
+    <script src="js/modern-map.js"></script>
+    <script src="js/modern-dashboard.js"></script>
+    
+    <script>
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const dashboard = new ModernDashboard();
+            dashboard.initialize();
+        });
+    </script>
+</body>
+</html>
