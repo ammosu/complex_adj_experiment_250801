@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣住宅社區調整率分析平台</title>
+    <script>
+        // 立即重定向到現代化版本
+        window.location.replace('./index_modern.html');
+    </script>
+    <meta http-equiv="refresh" content="0; url=./index_modern.html">
+    <style>
+        body {
+            text-align: center;
+            padding: 50px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: #fff;
+            animation: spin 1s ease infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        a {
+            color: #fff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 台灣住宅社區調整率分析平台</h1>
+        <div class="spinner"></div>
+        <p>正在載入分析平台...</p>
+        <p><a href="./index_modern.html">如果沒有自動跳轉，請點擊這裡</a></p>
+        
+        <script>
+            // 備用重定向邏輯
+            setTimeout(function() {
+                if (window.location.href.indexOf('index_modern.html') === -1) {
+                    window.location.href = './index_modern.html';
+                }
+            }, 1000);
+        </script>
+    </div>
+</body>
+</html>
