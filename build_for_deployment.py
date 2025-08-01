@@ -12,22 +12,63 @@ import subprocess
 import sys
 
 def check_data_file():
-    """檢查是否有真實數據文件"""
-    data_files = [
+    """檢查是否有真實數據文件，支援遠端S3數據源"""
+    import urllib.request
+    import ssl
+    
+    # 遠端S3數據源 - 必須透過環境變數設定
+    remote_url = os.getenv('HOUSING_DATA_URL')
+    
+    # 本地文件路徑
+    local_files = [
         'complex_ids.csv',
-        'data/complex_ids.csv',
+        'data/complex_ids.csv', 
         'data_backup/complex_ids.csv'
     ]
     
-    for file_path in data_files:
+    # 1. 先檢查本地文件
+    for file_path in local_files:
         if Path(file_path).exists():
-            print(f"✅ 找到數據文件: {file_path}")
+            size_mb = Path(file_path).stat().st_size / (1024 * 1024)
+            print(f"✅ 找到本地數據文件: {file_path} ({size_mb:.1f}MB)")
             return file_path
     
+    # 2. 嘗試從遠端獲取
+    if remote_url:
+        print("🌐 本地無數據，嘗試從遠端獲取...")
+        
+        try:
+            # 創建SSL上下文以避免證書問題
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            # 下載到臨時文件
+            temp_file = "temp_complex_ids.csv"
+            
+            print(f"📥 正在下載: {remote_url}")
+            urllib.request.urlretrieve(remote_url, temp_file)
+            
+            # 檢查下載的文件
+            if Path(temp_file).exists():
+                size_mb = Path(temp_file).stat().st_size / (1024 * 1024)
+                print(f"✅ 成功下載遠端數據: {temp_file} ({size_mb:.1f}MB)")
+                return temp_file
+            else:
+                print("❌ 下載失敗：文件不存在")
+                
+        except Exception as e:
+            print(f"❌ 遠端數據獲取失敗: {e}")
+    else:
+        print("⚠️ 未設定環境變數 HOUSING_DATA_URL")
+    
+    # 3. 都失敗則提示
     print("❌ 未找到真實數據文件")
-    print("請將 complex_ids.csv 放入以下任一位置：")
-    for file_path in data_files:
-        print(f"  - {file_path}")
+    print("請檢查以下選項：")
+    print("  1. 將 complex_ids.csv 放入本地目錄")
+    print("  2. 設定環境變數 HOUSING_DATA_URL 指向遠端數據源") 
+    print("  3. 確保遠端文件可公開訪問")
+    
     return None
 
 def run_analysis(data_file):

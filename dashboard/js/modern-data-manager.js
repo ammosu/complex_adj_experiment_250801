@@ -13,6 +13,9 @@ class ModernDataManager {
         };
         this.loadingStates = new Set();
         this.lastUpdated = null;
+        
+        // Initialize remote data loader
+        this.remoteLoader = new RemoteDataLoader();
     }
 
     /**
@@ -48,12 +51,21 @@ class ModernDataManager {
         this.setLoadingState('complexChanges', true);
         
         try {
-            const response = await fetch('data/complex_changes.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Try to load from remote data loader first
+            let data;
+            try {
+                console.log('🌐 嘗試從遠端S3載入數據...');
+                data = await this.remoteLoader.analyzeComplexChanges();
+                console.log('✅ 遠端數據載入成功');
+            } catch (remoteError) {
+                console.warn('⚠️ 遠端數據載入失敗，嘗試本地JSON:', remoteError);
+                // Fallback to local JSON
+                const response = await fetch('data/complex_changes.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                data = await response.json();
             }
-            
-            const data = await response.json();
             
             // Process and enhance data
             const processedData = data.map(complex => ({
@@ -90,12 +102,21 @@ class ModernDataManager {
         this.setLoadingState('countyStats', true);
 
         try {
-            const response = await fetch('data/county_stats.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Try to generate from remote data first
+            let data;
+            try {
+                console.log('🌐 從遠端數據生成縣市統計...');
+                data = await this.remoteLoader.generateCountyStats();
+                console.log('✅ 縣市統計生成成功');
+            } catch (remoteError) {
+                console.warn('⚠️ 遠端縣市統計生成失敗，嘗試本地JSON:', remoteError);
+                // Fallback to local JSON
+                const response = await fetch('data/county_stats.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                data = await response.json();
             }
-            
-            const data = await response.json();
             this.data.countyStats = data;
             this.cache.set('countyStats', data);
             this.notifySubscribers('countyStats', data);
@@ -121,12 +142,21 @@ class ModernDataManager {
         this.setLoadingState('versionTrends', true);
 
         try {
-            const response = await fetch('data/version_trends.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Try to generate from remote data first
+            let data;
+            try {
+                console.log('🌐 從遠端數據生成版本趨勢...');
+                data = await this.remoteLoader.generateVersionTrends();
+                console.log('✅ 版本趨勢生成成功');
+            } catch (remoteError) {
+                console.warn('⚠️ 遠端版本趨勢生成失敗，嘗試本地JSON:', remoteError);
+                // Fallback to local JSON
+                const response = await fetch('data/version_trends.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                data = await response.json();
             }
-            
-            const data = await response.json();
             this.data.versionTrends = data;
             this.cache.set('versionTrends', data);
             this.notifySubscribers('versionTrends', data);
