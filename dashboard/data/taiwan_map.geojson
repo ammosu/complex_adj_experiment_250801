@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "台北",
+        "county": "台北"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              121.4,
+              25.1
+            ],
+            [
+              121.7,
+              25.1
+            ],
+            [
+              121.7,
+              25.3
+            ],
+            [
+              121.4,
+              25.3
+            ],
+            [
+              121.4,
+              25.1
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "新北",
+        "county": "新北"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              121.3,
+              24.9
+            ],
+            [
+              121.8,
+              24.9
+            ],
+            [
+              121.8,
+              25.4
+            ],
+            [
+              121.3,
+              25.4
+            ],
+            [
+              121.3,
+              24.9
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "台中",
+        "county": "台中"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              120.5,
+              24.0
+            ],
+            [
+              120.9,
+              24.0
+            ],
+            [
+              120.9,
+              24.4
+            ],
+            [
+              120.5,
+              24.4
+            ],
+            [
+              120.5,
+              24.0
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "高雄",
+        "county": "高雄"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              120.2,
+              22.5
+            ],
+            [
+              120.5,
+              22.5
+            ],
+            [
+              120.5,
+              22.8
+            ],
+            [
+              120.2,
+              22.8
+            ],
+            [
+              120.2,
+              22.5
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "新竹",
+        "county": "新竹"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              120.8,
+              24.6
+            ],
+            [
+              121.2,
+              24.6
+            ],
+            [
+              121.2,
+              24.9
+            ],
+            [
+              120.8,
+              24.9
+            ],
+            [
+              120.8,
+              24.6
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

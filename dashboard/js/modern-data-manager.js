@@ -208,7 +208,13 @@ class ModernDataManager {
         try {
             const response = await fetch('data/taiwan_map.geojson');
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.warn(`⚠️ 台灣地圖載入失敗 (${response.status})，使用簡化地圖`);
+                // 使用簡化的台灣地圖數據
+                const simplifiedMap = this.createSimplifiedTaiwanMap();
+                this.data.taiwanMap = simplifiedMap;
+                this.cache.set('taiwanMap', simplifiedMap);
+                this.notifySubscribers('taiwanMap', simplifiedMap);
+                return simplifiedMap;
             }
             
             const data = await response.json();
@@ -218,11 +224,67 @@ class ModernDataManager {
             
             return data;
         } catch (error) {
-            console.error('Error loading Taiwan map:', error);
-            throw error;
+            console.warn('⚠️ 台灣地圖載入失敗，使用簡化地圖:', error.message);
+            // 降級到簡化地圖
+            const simplifiedMap = this.createSimplifiedTaiwanMap();
+            this.data.taiwanMap = simplifiedMap;
+            this.cache.set('taiwanMap', simplifiedMap);
+            this.notifySubscribers('taiwanMap', simplifiedMap);
+            return simplifiedMap;
         } finally {
             this.setLoadingState('taiwanMap', false);
         }
+    }
+
+    /**
+     * 創建簡化的台灣地圖數據
+     */
+    createSimplifiedTaiwanMap() {
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {"name": "台北", "county": "台北"},
+                    "geometry": {"type": "Point", "coordinates": [121.5654, 25.0330]}
+                },
+                {
+                    "type": "Feature", 
+                    "properties": {"name": "新北", "county": "新北"},
+                    "geometry": {"type": "Point", "coordinates": [121.4627, 25.0173]}
+                },
+                {
+                    "type": "Feature",
+                    "properties": {"name": "桃園", "county": "桃園"},
+                    "geometry": {"type": "Point", "coordinates": [121.3009, 24.9936]}
+                },
+                {
+                    "type": "Feature",
+                    "properties": {"name": "台中", "county": "台中"},
+                    "geometry": {"type": "Point", "coordinates": [120.6736, 24.1477]}
+                },
+                {
+                    "type": "Feature",
+                    "properties": {"name": "台南", "county": "台南"},
+                    "geometry": {"type": "Point", "coordinates": [120.2513, 23.1417]}
+                },
+                {
+                    "type": "Feature",
+                    "properties": {"name": "高雄", "county": "高雄"},
+                    "geometry": {"type": "Point", "coordinates": [120.3014, 22.6273]}
+                },
+                {
+                    "type": "Feature",
+                    "properties": {"name": "新竹", "county": "新竹"},
+                    "geometry": {"type": "Point", "coordinates": [120.9647, 24.8138]}
+                },
+                {
+                    "type": "Feature",
+                    "properties": {"name": "苗栗", "county": "苗栗"},
+                    "geometry": {"type": "Point", "coordinates": [120.8214, 24.5602]}
+                }
+            ]
+        };
     }
 
     /**

@@ -172,7 +172,13 @@ class RemoteDataLoader {
 
         this.showLoadingProgress('正在分析複雜變化...');
 
-        // 按complex_id分組
+        // 檢查數據格式並直接返回（如果已經是分析後的格式）
+        if (rawData.length > 0 && rawData[0].complex_id && rawData[0].version_data) {
+            console.log('✅ 數據已是分析格式，直接使用');
+            return rawData;
+        }
+
+        // 按complex_id分組（原始CSV格式）
         const complexGroups = new Map();
         
         rawData.forEach(row => {
