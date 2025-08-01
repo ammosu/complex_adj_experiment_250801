@@ -31,6 +31,7 @@ body {
     background-color: var(--neutral-50);
     color: var(--neutral-800);
     line-height: 1.6;
+    padding-top: 76px; /* Account for fixed navbar */
 }
 
 /* Loading Overlay */
@@ -63,6 +64,49 @@ body {
 .navbar {
     box-shadow: var(--shadow-md);
     background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%) !important;
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    width: 100%;
+}
+
+.navbar.navbar-hidden {
+    transform: translateY(-100%);
+}
+
+.navbar.navbar-compact {
+    padding: 0.25rem 0;
+    background: linear-gradient(135deg, rgba(30, 64, 175, 0.95) 0%, rgba(99, 102, 241, 0.95) 100%) !important;
+    backdrop-filter: blur(10px);
+}
+
+.navbar.navbar-compact .navbar-brand {
+    font-size: 1rem;
+}
+
+.navbar.navbar-compact .nav-link {
+    padding: 0.25rem 0.75rem;
+}
+
+/* Section indicator */
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 0.375rem;
+}
+
+/* Progress indicator */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, #0d6efd, #6610f2);
+    z-index: 1031;
+    transition: width 0.1s ease;
 }
 
 .navbar-brand {
@@ -92,14 +136,16 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+/* KPI Card heights - moved to KPI section */
+
 /* Section Headers */
 .section-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     padding: 1.5rem 2rem 1rem;
     border-bottom: 1px solid var(--neutral-200);
-    background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
+    background: var(--neutral-50);
 }
 
 .section-title {
@@ -121,7 +167,7 @@ body {
 
 /* KPI Cards */
 #kpi-section {
-    background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%);
+    background: var(--primary-600);
     color: white;
     border: none;
 }
@@ -147,6 +193,10 @@ body {
     padding: 1.5rem;
     text-align: center;
     transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .kpi-card:hover {

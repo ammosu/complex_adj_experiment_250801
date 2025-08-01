@@ -15,9 +15,8 @@ backup/
 # 生成的分析結果文件 (運行時生成)
 dashboard/data/*.json
 !dashboard/data/.gitkeep  # 保留目錄結構
-dashboard/data/*.geojson
 !dashboard/data/sample_*.json  # 允許小型樣本文件
-!dashboard/data/taiwan_map.geojson  # 台灣地圖檔案可保留(小於3KB)
+!dashboard/data/twCounty2010.geojson  # 正確的台灣縣市邊界地圖檔案
 
 # Python 相關
 __pycache__/

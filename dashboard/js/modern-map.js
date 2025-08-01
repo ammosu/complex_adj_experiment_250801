@@ -45,28 +45,65 @@ class ModernMapManager {
      * Initialize Leaflet map
      */
     initializeLeafletMap() {
-        // Taiwan center coordinates
-        const taiwanCenter = [23.8, 120.9];
-        const taiwanBounds = [[21.5, 119.3], [26.4, 122.0]];
+        try {
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                throw new Error('Leaflet library not loaded');
+            }
 
-        this.map = L.map(this.containerId, {
-            center: taiwanCenter,
-            zoom: 7,
-            minZoom: 6,
-            maxZoom: 10,
-            maxBounds: taiwanBounds,
-            scrollWheelZoom: true,
-            zoomControl: true
-        });
+            // Taiwan center coordinates
+            const taiwanCenter = [23.8, 120.9];
+            const taiwanBounds = [[21.5, 119.3], [26.4, 122.0]];
 
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
-        }).addTo(this.map);
+            this.map = L.map(this.containerId, {
+                center: taiwanCenter,
+                zoom: 7,
+                minZoom: 6,
+                maxZoom: 10,
+                maxBounds: taiwanBounds,
+                scrollWheelZoom: true,
+                zoomControl: true
+            });
 
-        // Add custom controls
-        this.addMapControls();
+            // Add tile layer with error handling
+            const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18,
+                errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+            });
+
+            tileLayer.on('tileerror', function(error) {
+                console.warn('Tile loading error:', error);
+            });
+
+            tileLayer.addTo(this.map);
+
+            // Add custom controls
+            this.addMapControls();
+
+            console.log('Map initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize map:', error);
+            this.createMapErrorDisplay();
+        }
+    }
+
+    /**
+     * Create error display when map initialization fails
+     */
+    createMapErrorDisplay() {
+        const container = document.getElementById(this.containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                    <div class="text-center">
+                        <i class="fas fa-map fa-3x mb-3"></i>
+                        <p>地圖載入失敗</p>
+                        <small>請檢查網路連接或重新整理頁面</small>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     /**
@@ -79,6 +116,8 @@ class ModernMapManager {
             return;
         }
 
+        console.log('Processing county data for', complexes.length, 'complexes');
+
         // Group data by county
         const countyGroups = new Map();
         
@@ -89,6 +128,8 @@ class ModernMapManager {
             }
             countyGroups.get(county).push(complex);
         });
+
+        console.log('Found counties in data:', Array.from(countyGroups.keys()));
 
         // Calculate county statistics
         countyGroups.forEach((complexes, county) => {
@@ -111,8 +152,74 @@ class ModernMapManager {
             });
         });
 
+        console.log('Processed county statistics for:', Array.from(this.countyData.keys()));
+
         // Update color scales
         this.updateColorScale();
+    }
+
+    /**
+     * Preprocess GeoJSON to merge subdivisions into counties
+     */
+    preprocessGeoJSON(geoJSON) {
+        console.log('Preprocessing GeoJSON to merge county subdivisions...');
+        
+        // Group features by county name
+        const countyGroups = new Map();
+        
+        geoJSON.features.forEach(feature => {
+            const countyName = feature.properties.COUNTYNAME;
+            if (!countyGroups.has(countyName)) {
+                countyGroups.set(countyName, []);
+            }
+            countyGroups.get(countyName).push(feature);
+        });
+        
+        console.log(`Found ${countyGroups.size} unique counties in GeoJSON`);
+        console.log('Counties found:', Array.from(countyGroups.keys()));
+        
+        // Create new features by merging geometries for each county
+        const mergedFeatures = [];
+        
+        countyGroups.forEach((features, countyName) => {
+            if (features.length === 1) {
+                // Single feature, use as-is
+                mergedFeatures.push(features[0]);
+            } else {
+                // Multiple features, combine into MultiPolygon
+                console.log(`Merging ${features.length} subdivisions for ${countyName}`);
+                
+                const allCoordinates = [];
+                features.forEach(feature => {
+                    if (feature.geometry.type === 'Polygon') {
+                        allCoordinates.push(feature.geometry.coordinates);
+                    } else if (feature.geometry.type === 'MultiPolygon') {
+                        allCoordinates.push(...feature.geometry.coordinates);
+                    }
+                });
+                
+                const mergedFeature = {
+                    type: 'Feature',
+                    properties: {
+                        COUNTYNAME: countyName,
+                        COUNTYSN: features[0].properties.COUNTYSN // Use first one's ID
+                    },
+                    geometry: {
+                        type: 'MultiPolygon',
+                        coordinates: allCoordinates
+                    }
+                };
+                
+                mergedFeatures.push(mergedFeature);
+            }
+        });
+        
+        console.log(`Created ${mergedFeatures.length} merged county features`);
+        
+        return {
+            type: 'FeatureCollection',
+            features: mergedFeatures
+        };
     }
 
     /**
@@ -120,23 +227,84 @@ class ModernMapManager {
      */
     async loadTaiwanGeoJSON() {
         try {
-            const taiwanGeoJSON = this.dataManager.data.taiwanMap;
+            console.log('Starting Taiwan GeoJSON loading process...');
+            
+            // Try to load from existing data first
+            let taiwanGeoJSON = this.dataManager.data.taiwanMap;
+            
+            // If not available, try to load from local file
             if (!taiwanGeoJSON) {
-                console.warn('Taiwan GeoJSON data not available');
-                return;
+                console.log('Loading Taiwan GeoJSON from local file...');
+                try {
+                    const response = await fetch('data/twCounty2010.geojson');
+                    if (response.ok) {
+                        taiwanGeoJSON = await response.json();
+                        console.log('Successfully loaded Taiwan GeoJSON with', taiwanGeoJSON.features?.length, 'features');
+                        
+                        // Log first few county names for debugging
+                        if (taiwanGeoJSON.features && taiwanGeoJSON.features.length > 0) {
+                            const sampleCounty = taiwanGeoJSON.features[0].properties;
+                            console.log('Sample county properties:', sampleCounty);
+                        }
+                    } else {
+                        throw new Error(`Failed to fetch GeoJSON file: ${response.status} ${response.statusText}`);
+                    }
+                } catch (fetchError) {
+                    console.warn('Could not load Taiwan GeoJSON:', fetchError);
+                    this.createFallbackDisplay();
+                    return;
+                }
             }
 
-            // Create GeoJSON layer
-            this.geoJsonLayer = L.geoJSON(taiwanGeoJSON, {
-                style: (feature) => this.getFeatureStyle(feature),
-                onEachFeature: (feature, layer) => this.onEachFeature(feature, layer)
-            }).addTo(this.map);
+            // Validate GeoJSON structure
+            if (!taiwanGeoJSON || !taiwanGeoJSON.features || taiwanGeoJSON.features.length === 0) {
+                throw new Error('Invalid or empty GeoJSON data');
+            }
+
+            console.log('Creating Leaflet GeoJSON layer...');
+            
+            // Process the GeoJSON to group by county first
+            const processedGeoJSON = this.preprocessGeoJSON(taiwanGeoJSON);
+            
+            // Create GeoJSON layer with debug logging
+            this.geoJsonLayer = L.geoJSON(processedGeoJSON, {
+                style: (feature) => {
+                    const style = this.getFeatureStyle(feature);
+                    console.log(`Applying style to ${feature.properties.COUNTYNAME}:`, style);
+                    return style;
+                },
+                onEachFeature: (feature, layer) => {
+                    // Debug: log the actual geometry type
+                    console.log(`✓ Processing feature for county: ${feature.properties.COUNTYNAME}, geometry type: ${feature.geometry.type}`);
+                    if (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon') {
+                        const coordCount = feature.geometry.type === 'Polygon' 
+                            ? feature.geometry.coordinates[0].length 
+                            : feature.geometry.coordinates.reduce((sum, poly) => sum + poly[0].length, 0);
+                        console.log(`${feature.geometry.type} has ${coordCount} coordinate points`);
+                    }
+                    this.onEachFeature(feature, layer);
+                }
+            });
+            
+            if (!this.geoJsonLayer) {
+                throw new Error('Failed to create GeoJSON layer');
+            }
+            
+            this.geoJsonLayer.addTo(this.map);
+            console.log('GeoJSON layer added to map successfully');
 
             // Fit map to bounds
-            this.map.fitBounds(this.geoJsonLayer.getBounds(), { padding: [20, 20] });
+            const bounds = this.geoJsonLayer.getBounds();
+            if (bounds.isValid()) {
+                this.map.fitBounds(bounds, { padding: [20, 20] });
+                console.log('Map fitted to GeoJSON bounds');
+            } else {
+                console.warn('Invalid bounds from GeoJSON layer');
+            }
 
         } catch (error) {
             console.error('Error loading Taiwan GeoJSON:', error);
+            this.createFallbackDisplay();
         }
     }
 
@@ -154,13 +322,16 @@ class ModernMapManager {
             const value = this.getCurrentModeValue(countyStats);
             fillColor = this.getColorForValue(value);
             fillOpacity = 0.7;
+            console.log(`✓ Styling county ${countyName} with color ${fillColor}, value: ${value.toFixed(3)}`);
+        } else {
+            console.log(`✗ No data found for county: ${countyName}, using default gray styling`);
         }
 
         return {
             fillColor,
-            weight: 1,
-            opacity: 0.8,
-            color: '#666666',
+            weight: 2,
+            opacity: 1,
+            color: '#333333',
             fillOpacity
         };
     }
@@ -171,7 +342,138 @@ class ModernMapManager {
     getCountyName(feature) {
         // Try different possible property names for county
         const props = feature.properties;
-        return props.COUNTYNAME || props.county || props.name || props.NAME || 'Unknown';
+        let countyName = props.COUNTYNAME || props.county || props.name || props.NAME || 'Unknown';
+        
+        // Mapping from GeoJSON county names to data county names
+        const countyMapping = {
+            '台北市': '台北',
+            '台北縣': '新北',
+            '新北市': '新北', 
+            '桃園縣': '桃園',
+            '桃園市': '桃園',
+            '新竹縣': '新竹',
+            '新竹市': '新竹',
+            '苗栗縣': '苗栗',
+            '台中縣': '台中',
+            '台中市': '台中',
+            '彰化縣': '彰化',
+            '南投縣': '南投',
+            '雲林縣': '雲林',
+            '嘉義縣': '嘉義',
+            '嘉義市': '嘉義',
+            '台南縣': '台南',
+            '台南市': '台南',
+            '高雄縣': '高雄',
+            '高雄市': '高雄',
+            '屏東縣': '屏東',
+            '宜蘭縣': '宜蘭',
+            '花蓮縣': '花蓮',
+            '台東縣': '台東',
+            '澎湖縣': '澎湖',
+            '基隆市': '基隆',
+            '金門縣': '金門',
+            '連江縣': '連江'
+        };
+        
+        // Use mapping or fallback to cleaned name
+        const mappedName = countyMapping[countyName] || countyName.replace(/[縣市]$/, '');
+        
+        // Debug logging to help troubleshoot mapping issues
+        if (countyName !== 'Unknown') {
+            console.log(`GeoJSON county: "${countyName}" -> Mapped to: "${mappedName}"`);
+        }
+        
+        return mappedName;
+    }
+
+    /**
+     * Create fallback display when GeoJSON fails
+     */
+    createFallbackDisplay() {
+        console.error('🚨 FALLBACK DISPLAY TRIGGERED - GeoJSON failed to load properly!');
+        console.log('Creating fallback map display...');
+        
+        // Remove any existing layers
+        if (this.geoJsonLayer) {
+            this.map.removeLayer(this.geoJsonLayer);
+        }
+        
+        // Create simplified Taiwan outline
+        const taiwanBounds = [[21.5, 119.3], [26.4, 122.0]];
+        const simpleTaiwanRect = L.rectangle(taiwanBounds, {
+            color: '#666666',
+            weight: 2,
+            fillColor: '#e6f3ff',
+            fillOpacity: 0.3
+        }).addTo(this.map);
+        
+        // Add county markers based on approximate locations
+        const countyLocations = {
+            '台北': [25.0330, 121.5654],
+            '新北': [25.0176, 121.5332],
+            '桃園': [24.9937, 121.3010],
+            '台中': [24.1477, 120.6736],
+            '台南': [22.9999, 120.2269],
+            '高雄': [22.6273, 120.3014],
+            '新竹': [24.8138, 120.9674],
+            '苗栗': [24.5602, 120.8214],
+            '彰化': [24.0518, 120.5161],
+            '南投': [23.9609, 120.9718],
+            '雲林': [23.7093, 120.4313],
+            '嘉義': [23.4801, 120.4491],
+            '屏東': [22.5519, 120.5487],
+            '宜蘭': [24.7021, 121.7377],
+            '花蓮': [23.9871, 121.6015],
+            '台東': [22.7972, 121.1713],
+            '澎湖': [23.5709, 119.5793],
+            '基隆': [25.1276, 121.7391],
+            '金門': [24.4495, 118.3773],
+            '連江': [26.1605, 119.9290]
+        };
+        
+        // Add markers for counties with data
+        this.countyData.forEach((stats, county) => {
+            const location = countyLocations[county];
+            if (location) {
+                const value = this.getCurrentModeValue(stats);
+                const color = this.getColorForValue(value);
+                
+                const marker = L.circleMarker(location, {
+                    radius: Math.max(8, Math.min(20, stats.complexCount / 200)),
+                    fillColor: color,
+                    color: '#666666',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(this.map);
+                
+                // Add popup
+                marker.bindPopup(`
+                    <div class="map-popup">
+                        <h6>${county}</h6>
+                        <div class="popup-stats">
+                            <div class="popup-stat">
+                                <span class="popup-stat-label">社區數量:</span>
+                                <span class="popup-stat-value">${stats.complexCount}</span>
+                            </div>
+                            <div class="popup-stat">
+                                <span class="popup-stat-label">平均波動:</span>
+                                <span class="popup-stat-value">${(stats.averageVolatility * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="popup-stat">
+                                <span class="popup-stat-label">穩定比例:</span>
+                                <span class="popup-stat-value">${(stats.stabilityRatio * 100).toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+        });
+        
+        // Fit map to Taiwan bounds
+        this.map.fitBounds(taiwanBounds, { padding: [20, 20] });
+        
+        console.log('Fallback map display created');
     }
 
     /**
@@ -303,10 +605,10 @@ class ModernMapManager {
                 this.geoJsonLayer.resetStyle(e.target);
             },
             click: (e) => {
+                // 只放大到縣市範圍，不自動跳轉到搜尋頁面
                 this.map.fitBounds(e.target.getBounds());
-                if (window.dashboard) {
-                    window.dashboard.filterByCounty(countyName);
-                }
+                // 顯示彈出視窗讓用戶選擇是否查看詳情
+                e.target.openPopup();
             }
         });
     }

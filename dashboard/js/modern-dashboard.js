@@ -6,7 +6,7 @@ class ModernDashboard {
         this.dataManager = new ModernDataManager();
         this.currentFilters = {
             counties: [],
-            volatilityRange: [0, 1],
+            volatilityRange: [0, 1.0],
             searchTerm: ''
         };
         this.selectedComplexes = new Set();
@@ -110,6 +110,9 @@ class ModernDashboard {
     async initializeComponents() {
         console.log('Initializing components...');
         
+        // Initialize smart navigation
+        this.components.smartNav = new SmartNavigation();
+        
         // Initialize map component (if ModernMapManager exists)
         if (typeof ModernMapManager !== 'undefined') {
             console.log('Initializing map component...');
@@ -183,8 +186,8 @@ class ModernDashboard {
         ];
 
         kpiContainer.innerHTML = kpiData.map(kpi => `
-            <div class="col-lg-3 col-md-6">
-                <div class="kpi-card fade-in-up">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="kpi-card fade-in-up h-100">
                     <div class="kpi-card-icon">
                         <i class="${kpi.icon}"></i>
                     </div>
@@ -554,20 +557,39 @@ class ModernDashboard {
      * Filter by county (called from map clicks)
      */
     filterByCounty(countyName) {
+        // 設置縣市篩選
         const countyFilter = document.getElementById('countyFilter');
         if (countyFilter) {
             // Clear existing selections
             Array.from(countyFilter.options).forEach(option => {
                 option.selected = option.value === countyName;
             });
-            this.handleSearch();
         }
         
-        // Scroll to search section
+        // 確保波動範圍設置為預設值 1.0
+        const volatilityRange = document.getElementById('volatilityRange');
+        const volatilityValue = document.getElementById('volatilityValue');
+        if (volatilityRange && volatilityValue) {
+            volatilityRange.value = '1.0';
+            volatilityValue.textContent = '1.0';
+        }
+        
+        // 清空搜尋框
+        const searchInput = document.getElementById('complexSearch');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        
+        // 滾動到搜尋區域
         const searchSection = document.getElementById('search-section');
         if (searchSection) {
             searchSection.scrollIntoView({ behavior: 'smooth' });
         }
+        
+        // 延遲執行搜尋以確保DOM元素都已準備好
+        setTimeout(() => {
+            this.handleSearch();
+        }, 100);
     }
 
     /**
@@ -583,6 +605,116 @@ class ModernDashboard {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+}
+
+/**
+ * Smart Navigation - Handles intelligent sticky navbar with scroll behavior
+ */
+class SmartNavigation {
+    constructor() {
+        this.navbar = document.querySelector('.navbar');
+        this.navLinks = document.querySelectorAll('.scroll-link');
+        this.sections = Array.from(this.navLinks).map(link => 
+            document.querySelector(link.getAttribute('href'))
+        );
+        this.lastScrollTop = 0;
+        this.isScrollingDown = false;
+        
+        this.init();
+    }
+    
+    init() {
+        this.createProgressBar();
+        this.attachScrollListener();
+        this.attachResizeListener();
+    }
+    
+    createProgressBar() {
+        const progressBar = document.createElement('div');
+        progressBar.className = 'scroll-progress';
+        document.body.appendChild(progressBar);
+        this.progressBar = progressBar;
+    }
+    
+    attachScrollListener() {
+        let ticking = false;
+        
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    this.handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    }
+    
+    attachResizeListener() {
+        window.addEventListener('resize', () => {
+            this.updateSectionPositions();
+        });
+    }
+    
+    handleScroll() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const isScrollingDown = scrollTop > this.lastScrollTop;
+        const scrollThreshold = 100;
+        
+        // Update scroll direction
+        if (Math.abs(scrollTop - this.lastScrollTop) > 5) {
+            this.isScrollingDown = isScrollingDown;
+        }
+        
+        // Handle navbar visibility
+        if (scrollTop > scrollThreshold) {
+            this.navbar.classList.add('navbar-compact');
+            
+            if (this.isScrollingDown && scrollTop > this.lastScrollTop + 10) {
+                this.navbar.classList.add('navbar-hidden');
+            } else if (!this.isScrollingDown && scrollTop < this.lastScrollTop - 10) {
+                this.navbar.classList.remove('navbar-hidden');
+            }
+        } else {
+            this.navbar.classList.remove('navbar-compact', 'navbar-hidden');
+        }
+        
+        // Update progress bar
+        this.updateProgressBar();
+        
+        // Update active section
+        this.updateActiveSection();
+        
+        this.lastScrollTop = scrollTop;
+    }
+    
+    updateProgressBar() {
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight - windowHeight;
+        const scrolled = (window.pageYOffset / documentHeight) * 100;
+        this.progressBar.style.width = `${Math.min(scrolled, 100)}%`;
+    }
+    
+    updateActiveSection() {
+        const scrollPosition = window.pageYOffset + this.navbar.offsetHeight + 50;
+        
+        let activeSection = null;
+        this.sections.forEach((section, index) => {
+            if (section && section.offsetTop <= scrollPosition) {
+                activeSection = index;
+            }
+        });
+        
+        // Update active nav link
+        this.navLinks.forEach((link, index) => {
+            link.classList.toggle('active', index === activeSection);
+        });
+    }
+    
+    updateSectionPositions() {
+        // Recalculate section positions after resize
+        this.updateActiveSection();
     }
 }
 

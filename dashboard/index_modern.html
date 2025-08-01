@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台灣住宅社區調整率分析平台</title>
+    <title>社區調整率分析實驗</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -20,8 +20,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">
-                <i class="fas fa-home me-2"></i>
-                台灣住宅社區調整率分析平台
+                <i class="fas fa-chart-line me-2"></i>
+                社區調整率分析實驗
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -29,16 +29,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#overview">總覽</a>
+                        <a class="nav-link scroll-link" href="#kpi-section">總覽</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#geographic">地理分析</a>
+                        <a class="nav-link scroll-link" href="#geographic-section">地理分析</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#trends">趨勢分析</a>
+                        <a class="nav-link scroll-link" href="#trends-section">趨勢分析</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#search">社區搜尋</a>
+                        <a class="nav-link scroll-link" href="#search-section">社區搜尋</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="calculation-info.html" target="_blank">
@@ -160,7 +160,7 @@
                     <div class="col-lg-4">
                         <div class="card h-100">
                             <div class="card-header">
-                                <h5 class="card-title mb-0">智能搜尋</h5>
+                                <h5 class="card-title mb-0">搜尋篩選</h5>
                             </div>
                             <div class="card-body">
                                 <div class="search-controls">
@@ -179,10 +179,10 @@
                                     
                                     <div class="mb-3">
                                         <label for="volatilityRange" class="form-label">
-                                            波動範圍: <span id="volatilityValue">0.1</span>
+                                            波動範圍: <span id="volatilityValue">1.0</span>
                                         </label>
                                         <input type="range" class="form-range" id="volatilityRange" 
-                                               min="0" max="1" step="0.01" value="0.1">
+                                               min="0" max="1" step="0.01" value="1.0">
                                     </div>
                                     
                                     <button class="btn btn-primary w-100" id="searchButton">
@@ -315,6 +315,27 @@
         document.addEventListener('DOMContentLoaded', function() {
             const dashboard = new ModernDashboard();
             dashboard.initialize();
+            
+            // Add smooth scrolling for navigation links
+            document.querySelectorAll('.scroll-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        const navHeight = document.querySelector('.navbar').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - navHeight - 20;
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                        
+                        // Update active nav link
+                        document.querySelectorAll('.scroll-link').forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                });
+            });
         });
     </script>
 </body>

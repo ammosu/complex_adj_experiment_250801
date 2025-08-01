@@ -206,7 +206,7 @@ class ModernDataManager {
         this.setLoadingState('taiwanMap', true);
 
         try {
-            const response = await fetch('data/taiwan_map.geojson');
+            const response = await fetch('data/twCounty2010.geojson');
             if (!response.ok) {
                 console.warn(`⚠️ 台灣地圖載入失敗 (${response.status})，使用簡化地圖`);
                 // 使用簡化的台灣地圖數據
