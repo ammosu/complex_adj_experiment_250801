@@ -71,7 +71,60 @@ def check_data_file():
     
     return None
 
-def run_analysis(data_file):
+def check_valuation_data_file():
+    """檢查估值比較數據文件"""
+    import urllib.request
+    import ssl
+    
+    # 遠端S3數據源 - 必須透過環境變數設定
+    remote_url = os.getenv('VALUATION_DATA_URL')
+    
+    # 本地文件路徑
+    local_files = [
+        '社區原始估價比較.csv',
+        'data/社區原始估價比較.csv'
+    ]
+    
+    # 1. 先檢查本地文件
+    for file_path in local_files:
+        if Path(file_path).exists():
+            size_mb = Path(file_path).stat().st_size / (1024 * 1024)
+            print(f"✅ 找到本地估值數據文件: {file_path} ({size_mb:.1f}MB)")
+            return file_path
+    
+    # 2. 嘗試從遠端獲取
+    if remote_url:
+        print("🌐 本地無估值數據，嘗試從遠端獲取...")
+        
+        try:
+            # 創建SSL上下文以避免證書問題
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            
+            # 下載到臨時文件
+            temp_file = "temp_valuation_data.csv"
+            
+            print(f"📥 正在下載估值數據: {remote_url}")
+            urllib.request.urlretrieve(remote_url, temp_file)
+            
+            # 檢查下載的文件
+            if Path(temp_file).exists():
+                size_mb = Path(temp_file).stat().st_size / (1024 * 1024)
+                print(f"✅ 成功下載遠端估值數據: {temp_file} ({size_mb:.1f}MB)")
+                return temp_file
+            else:
+                print("❌ 估值數據下載失敗：文件不存在")
+                
+        except Exception as e:
+            print(f"❌ 遠端估值數據獲取失敗: {e}")
+    else:
+        print("⚠️ 未設定環境變數 VALUATION_DATA_URL")
+    
+    print("⚠️ 未找到估值比較數據文件，將跳過誤差分析")
+    return None
+
+def run_analysis(data_file, valuation_file=None):
     """運行完整分析"""
     print("🔄 正在運行完整分析...")
     
@@ -102,6 +155,32 @@ def run_analysis(data_file):
             print("✅ 詳細分析完成")
         else:
             print("⚠️ 詳細分析失敗，但繼續進行")
+        
+        # 運行估值誤差分析（如果有估值數據）
+        if valuation_file:
+            print("🔍 正在運行估值誤差分析...")
+            try:
+                result = subprocess.run([
+                    sys.executable, 'complex_error_analysis.py',
+                    valuation_file
+                ], capture_output=True, text=True, cwd='.')
+                
+                if result.returncode == 0:
+                    print("✅ 估值誤差分析完成")
+                    # 檢查是否生成了 JSON 文件
+                    error_analysis_file = Path('dashboard/data/complex_error_analysis.json')
+                    if error_analysis_file.exists():
+                        size_kb = error_analysis_file.stat().st_size / 1024
+                        print(f"   📊 生成誤差分析數據: {size_kb:.1f}KB")
+                    else:
+                        print("⚠️ 誤差分析數據文件未生成")
+                else:
+                    print(f"⚠️ 估值誤差分析失敗: {result.stderr}")
+                    
+            except Exception as e:
+                print(f"⚠️ 估值誤差分析過程出錯: {e}")
+        else:
+            print("⚠️ 跳過估值誤差分析（無估值數據）")
             
         return True
         
@@ -293,10 +372,11 @@ def main():
     
     # 檢查是否有真實數據
     data_file = check_data_file()
+    valuation_file = check_valuation_data_file()
     
     if data_file:
         # 有真實數據，運行完整分析
-        if run_analysis(data_file):
+        if run_analysis(data_file, valuation_file):
             print("✅ 使用真實數據完成分析")
         else:
             print("❌ 真實數據分析失敗，使用示例數據")
@@ -324,6 +404,13 @@ def main():
         size_mb = complex_file.stat().st_size / (1024 * 1024)
         data_type = "真實數據" if size_mb > 5 else "示例數據"
         print(f"- 分析數據: {data_type} ({size_mb:.1f}MB)")
+    
+    error_analysis_file = Path('dashboard/data/complex_error_analysis.json')
+    if error_analysis_file.exists():
+        size_kb = error_analysis_file.stat().st_size / 1024
+        print(f"- 誤差分析數據: 已生成 ({size_kb:.1f}KB)")
+    else:
+        print("- 誤差分析數據: 未生成")
     
     print("\n🌐 部署後訪問: /index_modern.html")
 

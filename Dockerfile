@@ -29,6 +29,9 @@ EXPOSE 8000
 RUN echo '#!/bin/bash\n\
 echo "🏠 住宅社區調整率分析系統"\n\
 echo "正在初始化數據..."\n\
+echo "環境變數狀態："\n\
+echo "- HOUSING_DATA_URL: ${HOUSING_DATA_URL:-(未設定)}"\n\
+echo "- VALUATION_DATA_URL: ${VALUATION_DATA_URL:-(未設定)}"\n\
 python3 build_for_deployment.py\n\
 echo "數據初始化完成"\n\
 echo "正在啟動前端服務..."\n\

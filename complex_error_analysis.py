@@ -286,7 +286,14 @@ def export_data_for_frontend(result, output_file):
     print(f"📁 檔案大小: {file_size:,} bytes ({file_size/1024/1024:.1f} MB)")
 
 def main():
-    csv_file = "社區原始估價比較.csv"
+    import sys
+    
+    # 支持命令列參數
+    if len(sys.argv) > 1:
+        csv_file = sys.argv[1]
+    else:
+        csv_file = "社區原始估價比較.csv"
+    
     output_file = "dashboard/data/complex_error_analysis.json"
     
     try:
