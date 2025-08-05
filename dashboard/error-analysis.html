@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社區估值誤差分析系統</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .error-positive { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+        .error-negative { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
+        .error-neutral { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+        
+        .mpe-cell {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .mpe-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .version-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .year-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-weight: bold;
+            text-align: center;
+            min-width: 50px;
+        }
+        
+        .expandable-row {
+            display: none;
+        }
+        
+        .expandable-row.show {
+            display: table-row;
+        }
+        
+        .transaction-detail {
+            background-color: #f8f9fa;
+            font-size: 0.85em;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .summary-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .no-data {
+            background-color: #e9ecef;
+            color: #6c757d;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .table-container {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .analysis-table {
+            min-width: 800px;
+        }
+        
+        .complex-selector {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+        }
+        
+        #detailTransactionArea {
+            border-top: 2px solid #e9ecef;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn-check:checked + .btn-outline-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+        
+        .version-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .version-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .year-mpe-card {
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        
+        .year-mpe-card:hover:not(.no-data) {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .year-mpe-card.error-positive {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.2);
+        }
+        
+        .year-mpe-card.error-negative {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-color: rgba(25, 135, 84, 0.2);
+        }
+        
+        .year-mpe-card.error-neutral {
+            background-color: rgba(108, 117, 125, 0.1);
+            border-color: rgba(108, 117, 125, 0.2);
+        }
+        
+        .year-mpe-card.no-data {
+            background-color: #f8f9fa;
+            border-color: #e9ecef;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            <div class="mt-3">
+                <h5>正在載入估值誤差分析數據...</h5>
+                <p class="text-muted">請稍候片刻</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calculator me-2"></i>
+                社區估值誤差分析系統
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="index_modern.html">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    回到主儀表板
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- 錯誤訊息 -->
+        <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="errorMessage">載入數據時發生錯誤</span>
+        </div>
+
+        <!-- 主要內容 -->
+        <div id="mainContent" style="display: none;">
+            <!-- 系統摘要 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="summary-card text-center">
+                        <div class="summary-number" id="totalCounties">-</div>
+                        <div>縣市數量</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card text-center">
+                        <div class="summary-number" id="totalComplexes">-</div>
+                        <div>社區總數</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card text-center">
+                        <div class="summary-number">6</div>
+                        <div>模型版本</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-card text-center">
+                        <div class="summary-number" id="totalTransactions">-</div>
+                        <div>總交易筆數</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 選擇控制區 -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-filter me-2"></i>
+                                選擇分析目標
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="countySelect" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        選擇縣市
+                                    </label>
+                                    <select id="countySelect" class="form-select">
+                                        <option value="">請選擇縣市...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="complexSelect" class="form-label">
+                                        <i class="fas fa-building me-1"></i>
+                                        選擇社區
+                                    </label>
+                                    <select id="complexSelect" class="form-select" disabled>
+                                        <option value="">請先選擇縣市...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div>
+                                        <button id="analyzeBtn" class="btn btn-primary" disabled>
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            開始分析
+                                        </button>
+                                        <button id="exportBtn" class="btn btn-outline-secondary ms-2" disabled>
+                                            <i class="fas fa-download me-2"></i>
+                                            匯出數據
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分析結果區 -->
+            <div id="analysisResults" style="display: none;">
+                <!-- 社區基本資訊 -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    社區基本資訊
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="complexInfo"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MPE分析圖表與表格 -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    版本 MPE (平均百分比誤差) 分析
+                                </h5>
+                                <div class="d-flex gap-2">
+                                    <!-- 視圖切換按鈕 -->
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <input type="radio" class="btn-check" name="mpeView" id="chartView" autocomplete="off" checked>
+                                        <label class="btn btn-outline-primary" for="chartView">
+                                            <i class="fas fa-chart-line me-1"></i>圖表視圖
+                                        </label>
+                                        <input type="radio" class="btn-check" name="mpeView" id="tableView" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="tableView">
+                                            <i class="fas fa-table me-1"></i>表格視圖
+                                        </label>
+                                    </div>
+                                    <!-- 表格操作按鈕 -->
+                                    <div class="btn-group btn-group-sm" role="group" id="tableControls" style="display: none;">
+                                        <button type="button" class="btn btn-outline-primary" onclick="toggleAllDetails(true)">
+                                            <i class="fas fa-expand-alt me-1"></i>展開全部
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="toggleAllDetails(false)">
+                                            <i class="fas fa-compress-alt me-1"></i>收合全部
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- 圖表視圖 -->
+                                <div id="chartContainer">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <h6 class="text-muted mb-3">MPE 時間序列趨勢 (含誤差範圍)</h6>
+                                            <div style="height: 400px; position: relative;">
+                                                <canvas id="mpeErrorBarChart"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <h6 class="text-muted mb-3">版本準確度統計</h6>
+                                            <div style="height: 400px; position: relative;">
+                                                <canvas id="mpeBarChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>使用說明：</strong>點擊圖表中的數據點查看該年度的詳細交易資料
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 表格視圖 -->
+                                <div id="tableContainer" style="display: none;">
+                                    <div class="table-container">
+                                        <table class="table table-bordered analysis-table" id="mpeTable">
+                                            <!-- 動態生成表格內容 -->
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- 詳細交易資料顯示區域 -->
+                                <div id="detailTransactionArea" style="display: none;">
+                                    <hr class="my-4">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="fas fa-list-alt me-2"></i>
+                                        詳細交易資料
+                                    </h6>
+                                    <div id="detailTransactionContent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 統計摘要 -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    統計摘要
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="statisticsSummary"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 使用說明 -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-question-circle me-2"></i>
+                                使用說明
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>選擇分析目標</strong>：先選擇縣市，再選擇該縣市的社區</li>
+                                <li><strong>MPE表格</strong>：顯示各版本在不同年度的平均百分比誤差，點擊數值可展開查看詳細交易</li>
+                                <li><strong>顏色編碼</strong>：
+                                    <span class="badge error-positive ms-1">紅色</span> 表示高估(正誤差)，
+                                    <span class="badge error-negative ms-1">綠色</span> 表示低估(負誤差)，
+                                    <span class="badge error-neutral ms-1">灰色</span> 表示無數據
+                                </li>
+                                <li><strong>數據展開</strong>：點擊MPE數值查看該年度所有交易的詳細百分比誤差</li>
+                                <li><strong>統計摘要</strong>：提供該社區各版本的整體統計分析</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <script>
+        class ErrorAnalysisApp {
+            constructor() {
+                this.data = null;
+                this.currentCounty = null;
+                this.currentComplex = null;
+                this.currentAnalysisData = null;
+                this.charts = new Map(); // 存儲圖表實例
+                this.currentView = 'chart'; // 當前視圖模式
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    this.showLoading(true);
+                    
+                    // 載入分析數據
+                    const response = await fetch('data/complex_error_analysis.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    this.data = await response.json();
+                    console.log('數據載入成功:', this.data);
+                    
+                    // 初始化界面
+                    this.initializeUI();
+                    this.bindEvents();
+                    
+                    this.showLoading(false);
+                    this.showMainContent(true);
+                    
+                } catch (error) {
+                    console.error('初始化失敗:', error);
+                    this.showError('載入數據失敗: ' + error.message);
+                    this.showLoading(false);
+                }
+            }
+
+            initializeUI() {
+                // 更新系統摘要
+                const metadata = this.data.metadata;
+                document.getElementById('totalCounties').textContent = metadata.total_counties;
+                document.getElementById('totalComplexes').textContent = metadata.total_complexes;
+                
+                // 計算總交易筆數
+                let totalTransactions = 0;
+                for (const county in this.data.counties) {
+                    totalTransactions += this.data.counties[county].summary.total_transactions;
+                }
+                document.getElementById('totalTransactions').textContent = totalTransactions.toLocaleString();
+
+                // 填充縣市選擇器
+                this.populateCountySelector();
+            }
+
+            populateCountySelector() {
+                const select = document.getElementById('countySelect');
+                const counties = Object.keys(this.data.counties).sort();
+                
+                counties.forEach(county => {
+                    const option = document.createElement('option');
+                    option.value = county;
+                    const complexCount = Object.keys(this.data.counties[county].complexes).length;
+                    option.textContent = `${county} (${complexCount}個社區)`;
+                    select.appendChild(option);
+                });
+            }
+
+            populateComplexSelector(county) {
+                const select = document.getElementById('complexSelect');
+                select.innerHTML = '<option value="">請選擇社區...</option>';
+                
+                if (!county || !this.data.counties[county]) {
+                    select.disabled = true;
+                    return;
+                }
+                
+                const complexes = Object.keys(this.data.counties[county].complexes).sort();
+                
+                complexes.forEach(complexName => {
+                    const option = document.createElement('option');
+                    option.value = complexName;
+                    
+                    // 計算該社區的數據統計
+                    const complexData = this.data.counties[county].complexes[complexName];
+                    const versionCount = Object.keys(complexData.versions).length;
+                    const yearRange = complexData.summary.total_years;
+                    const yearSpan = yearRange.length > 0 ? 
+                        `${Math.min(...yearRange)}-${Math.max(...yearRange)}` : '無';
+                    
+                    option.textContent = `${complexName} (${versionCount}版本, ${yearSpan})`;
+                    select.appendChild(option);
+                });
+                
+                select.disabled = false;
+            }
+
+            bindEvents() {
+                const countySelect = document.getElementById('countySelect');
+                const complexSelect = document.getElementById('complexSelect');
+                const analyzeBtn = document.getElementById('analyzeBtn');
+                const exportBtn = document.getElementById('exportBtn');
+
+                countySelect.addEventListener('change', (e) => {
+                    this.currentCounty = e.target.value;
+                    this.populateComplexSelector(this.currentCounty);
+                    
+                    // 重置分析結果
+                    document.getElementById('analysisResults').style.display = 'none';
+                    analyzeBtn.disabled = true;
+                    exportBtn.disabled = true;
+                });
+
+                complexSelect.addEventListener('change', (e) => {
+                    this.currentComplex = e.target.value;
+                    analyzeBtn.disabled = !this.currentComplex;
+                });
+
+                analyzeBtn.addEventListener('click', () => {
+                    if (this.currentCounty && this.currentComplex) {
+                        this.performAnalysis();
+                    }
+                });
+
+                exportBtn.addEventListener('click', () => {
+                    this.exportAnalysisData();
+                });
+
+                // 視圖切換事件
+                const chartViewRadio = document.getElementById('chartView');
+                const tableViewRadio = document.getElementById('tableView');
+                
+                chartViewRadio.addEventListener('change', () => {
+                    if (chartViewRadio.checked) {
+                        this.switchView('chart');
+                    }
+                });
+                
+                tableViewRadio.addEventListener('change', () => {
+                    if (tableViewRadio.checked) {
+                        this.switchView('table');
+                    }
+                });
+            }
+
+            performAnalysis() {
+                if (!this.currentCounty || !this.currentComplex) return;
+
+                console.log(`分析社區: ${this.currentCounty} - ${this.currentComplex}`);
+                
+                // 獲取分析數據
+                this.currentAnalysisData = this.data.counties[this.currentCounty].complexes[this.currentComplex];
+                
+                // 渲染分析結果
+                this.renderComplexInfo();
+                this.renderMPETable();
+                this.renderMPECharts(); // 新增圖表渲染
+                this.renderStatisticsSummary();
+                
+                // 顯示結果區域
+                document.getElementById('analysisResults').style.display = 'block';
+                document.getElementById('exportBtn').disabled = false;
+                
+                // 滾動到結果區域
+                document.getElementById('analysisResults').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+
+            renderComplexInfo() {
+                const summary = this.currentAnalysisData.summary;
+                const versions = Object.keys(this.currentAnalysisData.versions).sort();
+                
+                const html = `
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>社區名稱：</strong><br>
+                            <span class="text-primary">${this.currentComplex}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>所在縣市：</strong><br>
+                            <span class="text-info">${this.currentCounty}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>版本覆蓋：</strong><br>
+                            <span class="text-success">${versions.join(', ')}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>年度範圍：</strong><br>
+                            <span class="text-warning">${summary.total_years.length > 0 ? 
+                                `${Math.min(...summary.total_years)}-${Math.max(...summary.total_years)}` : '無數據'}</span>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('complexInfo').innerHTML = html;
+            }
+
+            renderMPETable() {
+                const versions = Object.keys(this.currentAnalysisData.versions).sort();
+                const allYears = this.currentAnalysisData.summary.total_years.sort();
+                
+                if (allYears.length === 0) {
+                    document.getElementById('mpeTable').innerHTML = '<div class="text-center text-muted">無可用數據</div>';
+                    return;
+                }
+
+                // 改為橫向表格佈局：年度為列，版本為行
+                let tableHtml = `
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="version-header" style="min-width: 120px;">版本 \ 年度</th>
+                `;
+                
+                // 年度列標題
+                allYears.forEach(year => {
+                    tableHtml += `<th class="year-header text-center" style="min-width: 120px;">${year}</th>`;
+                });
+                
+                tableHtml += `
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                // 版本行數據
+                versions.forEach(version => {
+                    const versionData = this.currentAnalysisData.versions[version];
+                    const overallMPE = versionData.overall_mpe;
+                    const overallClass = overallMPE !== null ? this.getMPECellClass(overallMPE) : 'error-neutral';
+                    
+                    tableHtml += `
+                        <tr>
+                            <td class="version-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-code-branch me-2"></i>版本 ${version}</span>
+                                    <span class="badge ${overallClass === 'error-positive' ? 'bg-danger' : 
+                                                       overallClass === 'error-negative' ? 'bg-success' : 'bg-secondary'}">
+                                        ${overallMPE !== null ? overallMPE.toFixed(1) + '%' : '無數據'}
+                                    </span>
+                                </div>
+                                <div class="mt-1">
+                                    <small class="text-muted">
+                                        交易筆數: ${versionData.transaction_count} | 
+                                        範圍: ${versionData.year_range && versionData.year_range.length === 2 ? 
+                                            `${versionData.year_range[0]}-${versionData.year_range[1]}` : '-'}
+                                    </small>
+                                </div>
+                            </td>
+                    `;
+                    
+                    // 年度MPE數據
+                    allYears.forEach(year => {
+                        const mpe = versionData.yearly_mpe[year];
+                        const transactions = versionData.detailed_transactions[year];
+                        const transactionCount = transactions ? transactions.length : 0;
+                        
+                        if (mpe !== undefined) {
+                            const cellClass = this.getMPECellClass(mpe);
+                            tableHtml += `
+                                <td class="text-center">
+                                    <div class="year-mpe-card ${cellClass}" 
+                                         data-version="${version}" data-year="${year}"
+                                         style="cursor: pointer; padding: 12px; border-radius: 8px; margin: 4px;">
+                                        <div class="h5 mb-1">${mpe.toFixed(1)}%</div>
+                                        <small class="text-muted">${transactionCount} 筆</small>
+                                        <div class="detail-toggle" id="detail-${version}-${year}" style="display: none; margin-top: 8px;">
+                                            <div class="card mt-2" style="font-size: 0.9em;">
+                                                <div class="card-body p-3" id="detail-content-${version}-${year}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            `;
+                        } else {
+                            tableHtml += `
+                                <td class="text-center">
+                                    <div class="year-mpe-card no-data" 
+                                         style="padding: 12px; border-radius: 8px; margin: 4px;">
+                                        <div class="h5 mb-1">-</div>
+                                        <small class="text-muted">無數據</small>
+                                    </div>
+                                </td>
+                            `;
+                        }
+                    });
+                    
+                    tableHtml += '</tr>';
+                });
+                
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                document.getElementById('mpeTable').innerHTML = tableHtml;
+                
+                // 綁定年度詳細資料展開事件
+                this.bindYearDetailEvents();
+            }
+            
+            // 新增：綁定年度詳細資料展開事件
+            bindYearDetailEvents() {
+                // 清除之前的事件監聽器（避免重複綁定）
+                const mpeTable = document.getElementById('mpeTable');
+                const newMpeTable = mpeTable.cloneNode(true);
+                mpeTable.parentNode.replaceChild(newMpeTable, mpeTable);
+                
+                // 使用事件委託來處理動態生成的元素
+                document.getElementById('mpeTable').addEventListener('click', (e) => {
+                    console.log('表格點擊事件觸發', e.target);
+                    
+                    const yearCard = e.target.closest('.year-mpe-card');
+                    if (!yearCard) {
+                        console.log('沒有找到 .year-mpe-card 元素');
+                        return;
+                    }
+                    
+                    if (yearCard.classList.contains('no-data')) {
+                        console.log('點擊的是無數據的卡片');
+                        return;
+                    }
+                    
+                    // 從data屬性中提取版本和年度信息
+                    const version = yearCard.getAttribute('data-version');
+                    const year = yearCard.getAttribute('data-year');
+                    
+                    console.log(`提取的版本: ${version}, 年度: ${year}`);
+                    
+                    if (version && year) {
+                        console.log(`準備切換年度詳細資料: ${version}-${year}`);
+                        this.toggleYearDetailInCard(version, parseInt(year));
+                    } else {
+                        console.error('無法提取版本或年度信息', { version, year });
+                    }
+                });
+            }
+            
+            // 新增：在卡片中切換年度詳細資料
+            toggleYearDetailInCard(version, year) {
+                console.log(`切換年度詳細資料: version=${version}, year=${year}`);
+                
+                const detailDivId = `detail-${version}-${year}`;
+                const contentDivId = `detail-content-${version}-${year}`;
+                
+                const detailDiv = document.getElementById(detailDivId);
+                const contentDiv = document.getElementById(contentDivId);
+                
+                console.log(`尋找元素: ${detailDivId}`, detailDiv);
+                console.log(`尋找元素: ${contentDivId}`, contentDiv);
+                
+                if (!detailDiv) {
+                    console.error(`找不到詳細資料容器: ${detailDivId}`);
+                    return;
+                }
+                
+                if (!contentDiv) {
+                    console.error(`找不到詳細內容容器: ${contentDivId}`);
+                    return;
+                }
+                
+                const isCurrentlyHidden = detailDiv.style.display === 'none' || detailDiv.style.display === '';
+                console.log(`當前狀態: 隱藏=${isCurrentlyHidden}, display=${detailDiv.style.display}`);
+                
+                if (isCurrentlyHidden) {
+                    // 展開詳細資料
+                    console.log('準備展開詳細資料');
+                    
+                    const currentContent = contentDiv.innerHTML.trim();
+                    console.log(`當前內容長度: ${currentContent.length}`);
+                    console.log(`當前內容: "${currentContent}"`);
+                    
+                    // 檢查內容是否為空或只是佔位符
+                    const hasRealContent = currentContent && 
+                                         currentContent.length > 50 && 
+                                         currentContent.includes('<table');
+                    
+                    if (!hasRealContent) {
+                        console.log('內容為空或無效，載入交易詳細資料');
+                        this.loadTransactionDetailsInCard(version, year, contentDivId);
+                    } else {
+                        console.log('內容已存在且有效，直接顯示');
+                    }
+                    
+                    detailDiv.style.display = 'block';
+                    console.log('詳細資料已展開');
+                } else {
+                    // 收合詳細資料
+                    console.log('收合詳細資料');
+                    detailDiv.style.display = 'none';
+                }
+            }
+            
+            // 新增：在卡片中載入交易詳細資料
+            loadTransactionDetailsInCard(version, year, contentId) {
+                console.log(`載入交易詳細資料: version=${version}, year=${year}, contentId=${contentId}`);
+                
+                // 檢查當前分析數據是否存在
+                if (!this.currentAnalysisData || !this.currentAnalysisData.versions) {
+                    console.error('沒有可用的分析數據');
+                    const contentElement = document.getElementById(contentId);
+                    if (contentElement) {
+                        contentElement.innerHTML = '<p class="text-danger mb-0">無法載入數據：分析數據不存在</p>';
+                    }
+                    return;
+                }
+
+                const versionData = this.currentAnalysisData.versions[version];
+                if (!versionData) {
+                    console.error(`找不到版本 ${version} 的數據`);
+                    const contentElement = document.getElementById(contentId);
+                    if (contentElement) {
+                        contentElement.innerHTML = '<p class="text-danger mb-0">找不到版本數據</p>';
+                    }
+                    return;
+                }
+
+                const transactions = versionData.detailed_transactions ? versionData.detailed_transactions[year] : null;
+                console.log(`版本 ${version} 年度 ${year} 的交易數據:`, transactions);
+                
+                if (!transactions || transactions.length === 0) {
+                    const contentElement = document.getElementById(contentId);
+                    if (contentElement) {
+                        contentElement.innerHTML = '<p class="text-muted mb-0">此年度無交易數據</p>';
+                    }
+                    return;
+                }
+
+                let html = `
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="text-primary">版本 ${version} - ${year}年 詳細交易</strong>
+                            <span class="badge bg-info">${transactions.length} 筆</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="font-size: 0.8em;">時間代碼</th>
+                                    <th style="font-size: 0.8em;">實際值</th>
+                                    <th style="font-size: 0.8em;">預測值</th>
+                                    <th style="font-size: 0.8em;">誤差(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                // 顯示所有交易，不限制數量（因為卡片內空間足夠）
+                transactions.forEach(transaction => {
+                    const peClass = this.getMPECellClass(transaction.pe);
+                    html += `
+                        <tr>
+                            <td style="font-size: 0.75em;">${transaction.time_code || 'N/A'}</td>
+                            <td style="font-size: 0.75em;">${new Intl.NumberFormat('zh-TW').format(Math.round(transaction.actual_value || 0))}</td>
+                            <td style="font-size: 0.75em;">${new Intl.NumberFormat('zh-TW').format(Math.round(transaction.predicted_value || 0))}</td>
+                            <td class="${peClass}" style="font-size: 0.75em;"><strong>${(transaction.pe || 0).toFixed(1)}%</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                
+                const contentElement = document.getElementById(contentId);
+                if (contentElement) {
+                    contentElement.innerHTML = html;
+                    console.log(`成功載入了 ${transactions.length} 筆交易資料到 ${contentId}`);
+                } else {
+                    console.error(`找不到內容容器: ${contentId}`);
+                }
+            }
+
+            getMPECellClass(mpe) {
+                if (mpe > 5) return 'error-positive';  // 高估超過5%
+                if (mpe < -5) return 'error-negative'; // 低估超過5%
+                if (mpe > 0) return 'error-positive';  // 正誤差
+                if (mpe < 0) return 'error-negative';  // 負誤差
+                return 'error-neutral';                // 接近0
+            }
+
+            renderStatisticsSummary() {
+                const versions = Object.keys(this.currentAnalysisData.versions).sort();
+                let summaryHtml = '<div class="row">';
+                
+                versions.forEach(version => {
+                    const versionData = this.currentAnalysisData.versions[version];
+                    const overallMPE = versionData.overall_mpe;
+                    const transactionCount = versionData.transaction_count;
+                    const yearRange = versionData.year_range;
+                    
+                    const cardClass = overallMPE !== null ? this.getMPECellClass(overallMPE) : 'error-neutral';
+                    
+                    summaryHtml += `
+                        <div class="col-md-2 mb-3">
+                            <div class="card h-100 ${cardClass}">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">版本 ${version}</h6>
+                                    <div class="h4">${overallMPE !== null ? overallMPE.toFixed(1) + '%' : '-'}</div>
+                                    <small>交易筆數: ${transactionCount}</small><br>
+                                    <small>年度: ${yearRange && yearRange.length === 2 ? `${yearRange[0]}-${yearRange[1]}` : '-'}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                summaryHtml += '</div>';
+                document.getElementById('statisticsSummary').innerHTML = summaryHtml;
+            }
+
+            exportAnalysisData() {
+                if (!this.currentAnalysisData) return;
+
+                const exportData = {
+                    社區名稱: this.currentComplex,
+                    縣市: this.currentCounty,
+                    分析時間: new Date().toISOString(),
+                    版本分析: {}
+                };
+
+                Object.keys(this.currentAnalysisData.versions).forEach(version => {
+                    const versionData = this.currentAnalysisData.versions[version];
+                    exportData.版本分析[version] = {
+                        整體MPE: versionData.overall_mpe,
+                        年度MPE: versionData.yearly_mpe,
+                        交易筆數: versionData.transaction_count,
+                        年度範圍: versionData.year_range
+                    };
+                });
+
+                // 下載JSON檔案
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+                    type: 'application/json;charset=utf-8;' 
+                });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${this.currentCounty}_${this.currentComplex}_誤差分析_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+            }
+
+            showLoading(show) {
+                document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+            }
+
+            showMainContent(show) {
+                document.getElementById('mainContent').style.display = show ? 'block' : 'none';
+            }
+
+            showError(message) {
+                document.getElementById('errorAlert').classList.remove('d-none');
+                document.getElementById('errorMessage').textContent = message;
+            }
+
+            // 視圖切換功能
+            switchView(viewType) {
+                this.currentView = viewType;
+                const chartContainer = document.getElementById('chartContainer');
+                const tableContainer = document.getElementById('tableContainer');
+                const tableControls = document.getElementById('tableControls');
+                
+                if (viewType === 'chart') {
+                    chartContainer.style.display = 'block';
+                    tableContainer.style.display = 'none';
+                    tableControls.style.display = 'none';
+                } else {
+                    chartContainer.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                    tableControls.style.display = 'flex';
+                }
+            }
+
+            // 渲染MPE圖表
+            renderMPECharts() {
+                this.destroyCharts(); // 清除舊圖表
+                
+                const versions = Object.keys(this.currentAnalysisData.versions).sort();
+                const allYears = this.currentAnalysisData.summary.total_years.sort();
+                
+                if (allYears.length === 0) return;
+
+                // 準備數據
+                const chartData = this.prepareMPEChartData(versions, allYears);
+                
+                // 創建error bar圖表
+                this.createMPEErrorBarChart(chartData);
+                
+                // 創建柱狀圖
+                this.createMPEBarChart(chartData);
+            }
+
+            // 準備圖表數據
+            prepareMPEChartData(versions, allYears) {
+                const errorBarData = {
+                    labels: allYears,
+                    datasets: []
+                };
+                
+                const barData = {
+                    labels: versions.map(v => `版本${v}`),
+                    datasets: [{
+                        label: '整體MPE',
+                        data: [],
+                        backgroundColor: [],
+                        borderColor: [],
+                        borderWidth: 1
+                    }]
+                };
+
+                // 為每個版本創建error bar數據
+                const colors = [
+                    '#ef4444', '#3b82f6', '#10b981', '#f59e0b', 
+                    '#8b5cf6', '#f97316', '#06b6d4', '#84cc16'
+                ];
+
+                versions.forEach((version, index) => {
+                    const versionData = this.currentAnalysisData.versions[version];
+                    const color = colors[index % colors.length];
+                    
+                    // 計算每年的MPE和標準差
+                    const errorBarPoints = allYears.map(year => {
+                        const yearlyMPE = versionData.yearly_mpe[year];
+                        const transactions = versionData.detailed_transactions[year];
+                        
+                        if (!yearlyMPE || !transactions || transactions.length === 0) {
+                            return null;
+                        }
+                        
+                        // 計算該年度的標準差
+                        const peValues = transactions.map(t => t.pe);
+                        const mean = peValues.reduce((sum, pe) => sum + pe, 0) / peValues.length;
+                        const variance = peValues.reduce((sum, pe) => sum + Math.pow(pe - mean, 2), 0) / peValues.length;
+                        const stdDev = Math.sqrt(variance);
+                        
+                        return {
+                            x: year,
+                            y: yearlyMPE,
+                            yMin: yearlyMPE - stdDev,
+                            yMax: yearlyMPE + stdDev
+                        };
+                    }).filter(point => point !== null);
+                    
+                    // Error bar數據集
+                    errorBarData.datasets.push({
+                        label: `版本${version}`,
+                        data: errorBarPoints.map(p => ({ x: p.x, y: p.y })),
+                        borderColor: color,
+                        backgroundColor: color + '40',
+                        borderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointStyle: 'circle',
+                        errorBars: {
+                            plus: errorBarPoints.map(p => p.yMax - p.y),
+                            minus: errorBarPoints.map(p => p.y - p.yMin),
+                            color: color,
+                            width: 2
+                        }
+                    });
+
+                    // 柱狀圖數據
+                    const overallMPE = versionData.overall_mpe;
+                    barData.datasets[0].data.push(overallMPE);
+                    
+                    // 根據MPE值設置顏色
+                    if (overallMPE !== null) {
+                        if (Math.abs(overallMPE) > 10) {
+                            barData.datasets[0].backgroundColor.push('#ef4444');
+                            barData.datasets[0].borderColor.push('#dc2626');
+                        } else if (Math.abs(overallMPE) > 5) {
+                            barData.datasets[0].backgroundColor.push('#f59e0b');
+                            barData.datasets[0].borderColor.push('#d97706');
+                        } else {
+                            barData.datasets[0].backgroundColor.push('#10b981');
+                            barData.datasets[0].borderColor.push('#059669');
+                        }
+                    } else {
+                        barData.datasets[0].backgroundColor.push('#6b7280');
+                        barData.datasets[0].borderColor.push('#4b5563');
+                    }
+                });
+
+                return { errorBarData, barData };
+            }
+
+            // 創建Error Bar圖表
+            createMPEErrorBarChart(chartData) {
+                const ctx = document.getElementById('mpeErrorBarChart').getContext('2d');
+                
+                // 由於Chart.js本身不直接支持error bars，我們使用scatter圖加自定義繪製
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: chartData.errorBarData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: false
+                            },
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: (context) => {
+                                        return `年度: ${context[0].parsed.x}`;
+                                    },
+                                    label: (context) => {
+                                        const dataset = context.dataset;
+                                        const dataIndex = context.dataIndex;
+                                        const point = dataset.data[dataIndex];
+                                        return [
+                                            `${dataset.label}: ${point.y.toFixed(1)}%`,
+                                            `範圍: ±${Math.abs(point.y - (dataset.errorBars?.minus[dataIndex] ? point.y - dataset.errorBars.minus[dataIndex] : point.y)).toFixed(1)}%`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: {
+                                    display: true,
+                                    text: '年度'
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: function(value) {
+                                        return Math.round(value);
+                                    }
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'MPE (%)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toFixed(1) + '%';
+                                    }
+                                }
+                            }
+                        },
+                        onClick: (event, activeElements) => {
+                            if (activeElements.length > 0) {
+                                const element = activeElements[0];
+                                const dataset = chartData.errorBarData.datasets[element.datasetIndex];
+                                const point = dataset.data[element.index];
+                                const version = dataset.label.replace('版本', '');
+                                
+                                this.showDetailTransactions(version, point.x);
+                            }
+                        }
+                    },
+                    plugins: [{
+                        // 自定義插件來繪製error bars
+                        afterDatasetDraw: (chart, args) => {
+                            const { ctx, chartArea: { top, bottom, left, right } } = chart;
+                            const datasets = chart.data.datasets;
+                            
+                            datasets.forEach((dataset, datasetIndex) => {
+                                if (!dataset.errorBars) return;
+                                
+                                const meta = chart.getDatasetMeta(datasetIndex);
+                                // 檢查dataset是否被隱藏
+                                if (meta.hidden) return;
+                                
+                                const color = dataset.borderColor;
+                                
+                                ctx.save();
+                                ctx.strokeStyle = color;
+                                ctx.lineWidth = 1.5;
+                                
+                                meta.data.forEach((point, index) => {
+                                    if (!point || dataset.errorBars.plus[index] === undefined) return;
+                                    
+                                    const x = point.x;
+                                    const y = point.y;
+                                    const plusError = dataset.errorBars.plus[index];
+                                    const minusError = dataset.errorBars.minus[index];
+                                    
+                                    // 計算error bar的像素位置
+                                    const yScale = chart.scales.y;
+                                    const dataY = dataset.data[index].y;
+                                    const yPlusPixel = yScale.getPixelForValue(dataY + plusError);
+                                    const yMinusPixel = yScale.getPixelForValue(dataY - minusError);
+                                    
+                                    // 繪製垂直線
+                                    ctx.beginPath();
+                                    ctx.moveTo(x, yPlusPixel);
+                                    ctx.lineTo(x, yMinusPixel);
+                                    ctx.stroke();
+                                    
+                                    // 繪製上端cap
+                                    ctx.beginPath();
+                                    ctx.moveTo(x - 4, yPlusPixel);
+                                    ctx.lineTo(x + 4, yPlusPixel);
+                                    ctx.stroke();
+                                    
+                                    // 繪製下端cap
+                                    ctx.beginPath();
+                                    ctx.moveTo(x - 4, yMinusPixel);
+                                    ctx.lineTo(x + 4, yMinusPixel);
+                                    ctx.stroke();
+                                });
+                                
+                                ctx.restore();
+                            });
+                        }
+                    }]
+                });
+
+                this.charts.set('errorBarChart', chart);
+            }
+
+            // 創建柱狀圖
+            createMPEBarChart(chartData) {
+                const ctx = document.getElementById('mpeBarChart').getContext('2d');
+                
+                const chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData.barData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: false
+                            },
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const value = context.parsed.y;
+                                        return `整體MPE: ${value !== null ? value.toFixed(1) + '%' : '無數據'}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '模型版本'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'MPE (%)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toFixed(1) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                this.charts.set('barChart', chart);
+            }
+
+            // 顯示詳細交易數據（從圖表點擊觸發）- 修改為顯示所有版本
+            showDetailTransactions(clickedVersion, year) {
+                // 收集所有版本在該年度的交易資料
+                const versions = Object.keys(this.currentAnalysisData.versions).sort();
+                let allVersionsData = [];
+                
+                versions.forEach(version => {
+                    const versionData = this.currentAnalysisData.versions[version];
+                    const transactions = versionData.detailed_transactions[year];
+                    
+                    if (transactions && transactions.length > 0) {
+                        allVersionsData.push({
+                            version: version,
+                            mpe: versionData.yearly_mpe[year],
+                            transactions: transactions,
+                            isClicked: version === clickedVersion
+                        });
+                    }
+                });
+
+                if (allVersionsData.length === 0) {
+                    this.showDetailTransactionArea('<p class="text-muted">此年度無交易數據</p>');
+                    return;
+                }
+
+                let html = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>${year}年 所有版本詳細交易資料</strong>
+                        <small class="ms-2 text-muted">(點擊版本 ${clickedVersion} 觸發)</small>
+                    </div>
+                `;
+
+                // 為每個版本創建摺疊式面板
+                allVersionsData.forEach((versionInfo, index) => {
+                    const isExpanded = versionInfo.isClicked ? 'show' : '';
+                    const collapseId = `collapse-${versionInfo.version}-${year}`;
+                    const mpeClass = this.getMPECellClass(versionInfo.mpe);
+                    
+                    html += `
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <button class="btn btn-link text-decoration-none p-0 fw-bold" 
+                                                type="button" data-bs-toggle="collapse" 
+                                                data-bs-target="#${collapseId}" 
+                                                aria-expanded="${versionInfo.isClicked ? 'true' : 'false'}">
+                                            <i class="fas fa-code-branch me-2"></i>
+                                            版本 ${versionInfo.version}
+                                        </button>
+                                    </h6>
+                                    <div>
+                                        <span class="badge ${mpeClass === 'error-positive' ? 'bg-danger' : 
+                                                           mpeClass === 'error-negative' ? 'bg-success' : 'bg-secondary'} me-2">
+                                            MPE: ${versionInfo.mpe ? versionInfo.mpe.toFixed(1) + '%' : '無數據'}
+                                        </span>
+                                        <span class="badge bg-info">
+                                            ${versionInfo.transactions.length} 筆交易
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="${collapseId}" class="collapse ${isExpanded}">
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>交易時間</th>
+                                                    <th>實際值</th>
+                                                    <th>預測值</th>
+                                                    <th>百分比誤差</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                    `;
+                    
+                    versionInfo.transactions.forEach(transaction => {
+                        const peClass = this.getMPECellClass(transaction.pe);
+                        html += `
+                            <tr>
+                                <td>${transaction.time_code}</td>
+                                <td>${new Intl.NumberFormat('zh-TW').format(Math.round(transaction.actual_value))}</td>
+                                <td>${new Intl.NumberFormat('zh-TW').format(Math.round(transaction.predicted_value))}</td>
+                                <td class="${peClass}"><strong>${transaction.pe.toFixed(1)}%</strong></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                this.showDetailTransactionArea(html);
+            }
+
+            // 顯示詳細交易區域
+            showDetailTransactionArea(content) {
+                const detailArea = document.getElementById('detailTransactionArea');
+                const detailContent = document.getElementById('detailTransactionContent');
+                
+                detailContent.innerHTML = content;
+                detailArea.style.display = 'block';
+                
+                // 滾動到詳細區域
+                detailArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // 清除所有圖表
+            destroyCharts() {
+                this.charts.forEach(chart => {
+                    chart.destroy();
+                });
+                this.charts.clear();
+            }
+        }
+
+        // 全域函數：切換年度詳細資料
+        function toggleYearDetails(version, year) {
+            const detailRowId = `detail-${version}-${year}`;
+            const detailRow = document.getElementById(detailRowId);
+            const contentId = `detail-content-${version}-${year}`;
+            
+            if (detailRow.classList.contains('show')) {
+                // 收合
+                detailRow.classList.remove('show');
+            } else {
+                // 展開
+                detailRow.classList.add('show');
+                
+                // 載入詳細交易數據
+                if (!document.getElementById(contentId).innerHTML) {
+                    loadTransactionDetails(version, year, contentId);
+                }
+            }
+        }
+
+        // 載入交易詳細資料
+        function loadTransactionDetails(version, year, contentId) {
+            const app = window.errorAnalysisApp;
+            if (!app || !app.currentAnalysisData) return;
+
+            const versionData = app.currentAnalysisData.versions[version];
+            const transactions = versionData.detailed_transactions[year];
+            
+            if (!transactions || transactions.length === 0) {
+                document.getElementById(contentId).innerHTML = '<p class="text-muted">此年度無交易數據</p>';
+                return;
+            }
+
+            let html = '<div class="row"><div class="col-12">';
+            html += `<h6><i class="fas fa-list me-2"></i>版本 ${version} - ${year}年 詳細交易 (${transactions.length} 筆)</h6>`;
+            html += '<div class="table-responsive">';
+            html += '<table class="table table-sm table-striped">';
+            html += '<thead><tr><th>交易時間</th><th>實際值</th><th>估值</th><th>百分比誤差</th></tr></thead>';
+            html += '<tbody>';
+            
+            transactions.forEach(transaction => {
+                const peClass = app.getMPECellClass(transaction.pe);
+                html += `<tr>`;
+                html += `<td>${transaction.time_code}</td>`;
+                html += `<td>${new Intl.NumberFormat('zh-TW').format(Math.round(transaction.actual_value))}</td>`;
+                html += `<td>${new Intl.NumberFormat('zh-TW').format(Math.round(transaction.predicted_value))}</td>`;
+                html += `<td class="${peClass}"><strong>${transaction.pe.toFixed(1)}%</strong></td>`;
+                html += `</tr>`;
+            });
+            
+            html += '</tbody></table></div></div></div>';
+            document.getElementById(contentId).innerHTML = html;
+        }
+
+        // 全域函數：切換所有詳細資料
+        function toggleAllDetails(expand) {
+            const expandableRows = document.querySelectorAll('.expandable-row');
+            expandableRows.forEach(row => {
+                if (expand) {
+                    row.classList.add('show');
+                    // 載入詳細數據
+                    const contentDiv = row.querySelector('[id^="detail-content-"]');
+                    if (contentDiv && !contentDiv.innerHTML) {
+                        const parts = contentDiv.id.split('-');
+                        if (parts.length >= 4) {
+                            loadTransactionDetails(parts[2], parts[3], contentDiv.id);
+                        }
+                    }
+                } else {
+                    row.classList.remove('show');
+                }
+            });
+        }
+
+        // 啟動應用
+        document.addEventListener('DOMContentLoaded', () => {
+            window.errorAnalysisApp = new ErrorAnalysisApp();
+        });
+    </script>
+</body>
+</html>

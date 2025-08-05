@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社區估值分析 - Housing Complex Valuation Analysis</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-container.large {
+            height: 500px;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-card .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-card .stats-label {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .complex-selector {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .alert-custom {
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+        }
+        
+        .section-title {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                社區估值分析系統
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="index_modern.html">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    回到主儀表板
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- 載入狀態 -->
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">載入中...</span>
+            </div>
+            <p class="mt-2">正在載入估值分析數據...</p>
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="errorMessage">載入數據時發生錯誤</span>
+        </div>
+
+        <!-- 主要內容 -->
+        <div id="mainContent" style="display: none;">
+            <!-- 統計摘要 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalComplexes">-</div>
+                        <div class="stats-label">分析社區總數</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="avgAccuracy">-</div>
+                        <div class="stats-label">平均估值準確度</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="bestComplex">-</div>
+                        <div class="stats-label">最佳準確度社區</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalVersions">246-251</div>
+                        <div class="stats-label">模型版本範圍</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 社區選擇器 -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-search me-2"></i>
+                                社區選擇與分析
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="complexSelect" class="form-label">選擇社區</label>
+                                    <select id="complexSelect" class="form-select">
+                                        <option value="">請選擇社區...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="countyFilter" class="form-label">按縣市篩選</label>
+                                    <select id="countyFilter" class="form-select">
+                                        <option value="">所有縣市</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button id="analyzeBtn" class="btn btn-primary" disabled>
+                                    <i class="fas fa-chart-area me-2"></i>
+                                    分析選定社區
+                                </button>
+                                <button id="showAllBtn" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-globe me-2"></i>
+                                    顯示整體分析
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圖表區域 -->
+            <div class="row">
+                <!-- 時間序列圖 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="section-title">
+                                <i class="fas fa-chart-line me-2"></i>
+                                時間序列分析
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="timeSeriesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 散點圖 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="section-title">
+                                <i class="fas fa-scatter-chart me-2"></i>
+                                估值準確度散點圖
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="scatterChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 縣市比較圖 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="section-title">
+                                <i class="fas fa-map me-2"></i>
+                                各縣市準確度比較
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="countyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 準確度熱力圖 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="section-title">
+                                <i class="fas fa-th me-2"></i>
+                                版本準確度熱力圖
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="heatmapChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 說明資訊 -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="alert alert-custom">
+                        <h6><i class="fas fa-info-circle me-2"></i>分析說明</h6>
+                        <ul class="mb-0">
+                            <li><strong>時間序列圖</strong>：顯示特定社區的估值與實際值隨時間變化，以及準確度趨勢</li>
+                            <li><strong>散點圖</strong>：展示估值與實際值的相關性，理想情況下點應該分布在對角線附近</li>
+                            <li><strong>縣市比較</strong>：比較不同縣市的平均估值準確度表現</li>
+                            <li><strong>熱力圖</strong>：顯示各社區在不同模型版本的準確度表現</li>
+                            <li><strong>顏色編碼</strong>：綠色表示高準確度(>90%)，藍色表示中等準確度(80-90%)，紅色表示低準確度(<80%)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js - 必須先載入 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 數據管理器和圖表管理器 -->
+    <script src="js/remote-data-loader.js"></script>
+    <script src="js/modern-data-manager.js"></script>
+    <script src="js/valuation-charts.js"></script>
+
+    <script>
+        class ValuationAnalysisApp {
+            constructor() {
+                this.dataManager = new ModernDataManager();
+                this.chartsManager = new ValuationChartsManager(this.dataManager);
+                this.currentComplex = null;
+                
+                this.init();
+            }
+
+            async init() {
+                try {
+                    this.showLoading(true);
+                    
+                    // 檢查Chart.js是否載入
+                    if (typeof Chart === 'undefined') {
+                        throw new Error('Chart.js 未正確載入');
+                    }
+                    
+                    // 載入數據
+                    await this.dataManager.loadAllData();
+                    
+                    // 初始化UI
+                    this.initializeUI();
+                    this.bindEvents();
+                    
+                    // 顯示整體分析
+                    this.showOverallAnalysis();
+                    
+                    this.showLoading(false);
+                    this.showMainContent(true);
+                    
+                } catch (error) {
+                    console.error('初始化失敗:', error);
+                    this.showError('載入數據失敗: ' + error.message);
+                    this.showLoading(false);
+                }
+            }
+
+            initializeUI() {
+                // 填充統計摘要
+                const stats = this.dataManager.getValuationStatsSummary();
+                if (stats) {
+                    document.getElementById('totalComplexes').textContent = stats.totalComplexes;
+                    document.getElementById('avgAccuracy').textContent = 
+                        (stats.averageAccuracy * 100).toFixed(1) + '%';
+                    document.getElementById('bestComplex').textContent = 
+                        stats.bestComplex?.社區名稱?.substring(0, 8) + '...' || '-';
+                }
+
+                // 填充社區選擇器
+                this.populateComplexSelector();
+                this.populateCountyFilter();
+            }
+
+            populateComplexSelector() {
+                const select = document.getElementById('complexSelect');
+                const performance = this.dataManager.data.valuationData?.complexPerformance || [];
+                
+                // 按準確度排序
+                const sorted = performance.sort((a, b) => (b.平均準確度 || 0) - (a.平均準確度 || 0));
+                
+                sorted.forEach(perf => {
+                    const option = document.createElement('option');
+                    option.value = perf.社區名稱;
+                    option.textContent = `${perf.社區名稱} (${perf.縣市}) - ${((perf.平均準確度 || 0) * 100).toFixed(1)}%`;
+                    select.appendChild(option);
+                });
+            }
+
+            populateCountyFilter() {
+                const select = document.getElementById('countyFilter');
+                const counties = this.dataManager.data.valuationData?.countyStats || [];
+                
+                // 按準確度排序
+                const sorted = counties.sort((a, b) => (b.平均準確度 || 0) - (a.平均準確度 || 0));
+                
+                sorted.forEach(county => {
+                    const option = document.createElement('option');
+                    option.value = county.縣市;
+                    option.textContent = `${county.縣市} - ${((county.平均準確度 || 0) * 100).toFixed(1)}%`;
+                    select.appendChild(option);
+                });
+            }
+
+            bindEvents() {
+                const complexSelect = document.getElementById('complexSelect');
+                const countyFilter = document.getElementById('countyFilter');
+                const analyzeBtn = document.getElementById('analyzeBtn');
+                const showAllBtn = document.getElementById('showAllBtn');
+
+                complexSelect.addEventListener('change', (e) => {
+                    const selected = e.target.value;
+                    analyzeBtn.disabled = !selected;
+                    if (selected) {
+                        this.currentComplex = selected;
+                    }
+                });
+
+                countyFilter.addEventListener('change', (e) => {
+                    this.filterComplexesByCounty(e.target.value);
+                });
+
+                analyzeBtn.addEventListener('click', () => {
+                    if (this.currentComplex) {
+                        this.showComplexAnalysis(this.currentComplex);
+                    }
+                });
+
+                showAllBtn.addEventListener('click', () => {
+                    this.showOverallAnalysis();
+                });
+            }
+
+            filterComplexesByCounty(county) {
+                const select = document.getElementById('complexSelect');
+                const performance = this.dataManager.data.valuationData?.complexPerformance || [];
+                
+                // 清空並重新填充
+                select.innerHTML = '<option value="">請選擇社區...</option>';
+                
+                const filtered = county ? 
+                    performance.filter(perf => perf.縣市 === county) : 
+                    performance;
+                
+                const sorted = filtered.sort((a, b) => (b.平均準確度 || 0) - (a.平均準確度 || 0));
+                
+                sorted.forEach(perf => {
+                    const option = document.createElement('option');
+                    option.value = perf.社區名稱;
+                    option.textContent = `${perf.社區名稱} - ${((perf.平均準確度 || 0) * 100).toFixed(1)}%`;
+                    select.appendChild(option);
+                });
+            }
+
+            showComplexAnalysis(complexName) {
+                console.log(`分析社區: ${complexName}`);
+                
+                // 創建時間序列圖
+                this.chartsManager.createComplexTimeSeriesChart(complexName, 'timeSeriesChart');
+                
+                // 創建該社區的散點圖
+                this.chartsManager.createValuationScatterChart('scatterChart', [complexName]);
+                
+                // 其他圖表保持不變
+                this.chartsManager.createCountyAccuracyChart('countyChart');
+                this.chartsManager.createAccuracyHeatmap('heatmapChart');
+            }
+
+            showOverallAnalysis() {
+                console.log('顯示整體分析');
+                
+                try {
+                    // 銷毀現有圖表
+                    this.chartsManager.destroyAllCharts();
+                    
+                    // 創建縣市比較圖
+                    console.log('創建縣市比較圖...');
+                    this.chartsManager.createCountyAccuracyChart('countyChart');
+                    
+                    // 創建整體散點圖
+                    console.log('創建散點圖...');
+                    this.chartsManager.createValuationScatterChart('scatterChart');
+                    
+                    // 創建準確度熱力圖
+                    console.log('創建熱力圖...');
+                    this.chartsManager.createAccuracyHeatmap('heatmapChart');
+                    
+                    // 時間序列圖需要特定社區，顯示提示
+                    this.drawTimeSeriesPlaceholder();
+                    
+                } catch (error) {
+                    console.error('顯示整體分析時發生錯誤:', error);
+                    this.showError('圖表創建失敗: ' + error.message);
+                }
+            }
+
+            drawTimeSeriesPlaceholder() {
+                try {
+                    const timeSeriesCanvas = document.getElementById('timeSeriesChart');
+                    const ctx = timeSeriesCanvas.getContext('2d');
+                    
+                    // 設置canvas尺寸
+                    timeSeriesCanvas.width = timeSeriesCanvas.offsetWidth;
+                    timeSeriesCanvas.height = timeSeriesCanvas.offsetHeight;
+                    
+                    ctx.clearRect(0, 0, timeSeriesCanvas.width, timeSeriesCanvas.height);
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#6c757d';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('請選擇特定社區查看時間序列分析', 
+                        timeSeriesCanvas.width / 2, timeSeriesCanvas.height / 2);
+                } catch (error) {
+                    console.error('繪製提示文字失敗:', error);
+                }
+            }
+
+            showLoading(show) {
+                const spinner = document.getElementById('loadingSpinner');
+                spinner.style.display = show ? 'block' : 'none';
+            }
+
+            showMainContent(show) {
+                const content = document.getElementById('mainContent');
+                content.style.display = show ? 'block' : 'none';
+            }
+
+            showError(message) {
+                const alert = document.getElementById('errorAlert');
+                const messageElement = document.getElementById('errorMessage');
+                messageElement.textContent = message;
+                alert.classList.remove('d-none');
+            }
+        }
+
+        // 啟動應用 - 使用window.onload確保所有腳本載入完成
+        function initApp() {
+            // 檢查所有必需的類別是否存在
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js 未載入');
+                document.getElementById('errorAlert').classList.remove('d-none');
+                document.getElementById('errorMessage').textContent = 'Chart.js 載入失敗，請檢查網路連線';
+                document.getElementById('loadingSpinner').style.display = 'none';
+                return;
+            }
+            
+            if (typeof ModernDataManager === 'undefined') {
+                console.error('ModernDataManager 未載入');
+                document.getElementById('errorAlert').classList.remove('d-none');
+                document.getElementById('errorMessage').textContent = '數據管理器載入失敗';
+                document.getElementById('loadingSpinner').style.display = 'none';
+                return;
+            }
+            
+            if (typeof ValuationChartsManager === 'undefined') {
+                console.error('ValuationChartsManager 未載入');
+                document.getElementById('errorAlert').classList.remove('d-none');
+                document.getElementById('errorMessage').textContent = '圖表管理器載入失敗';
+                document.getElementById('loadingSpinner').style.display = 'none';
+                return;
+            }
+            
+            console.log('所有依賴載入完成，啟動應用...');
+            new ValuationAnalysisApp();
+        }
+
+        // 使用多種方式確保載入完成
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            // 如果DOM已經準備好，延遲一下確保腳本載入
+            setTimeout(initApp, 100);
+        }
+    </script>
+</body>
+</html>

@@ -26,7 +26,8 @@ class ModernDataManager {
             this.loadComplexChanges(),
             this.loadCountyStats(),
             this.loadVersionTrends(),
-            this.loadTaiwanMap()
+            this.loadTaiwanMap(),
+            this.loadValuationData()
         ];
 
         try {
@@ -606,5 +607,166 @@ class ModernDataManager {
     clearCache() {
         this.cache.clear();
         console.log('Data cache cleared');
+    }
+
+    /**
+     * Load valuation analysis data
+     */
+    async loadValuationData() {
+        if (this.cache.has('valuationData')) {
+            this.data.valuationData = this.cache.get('valuationData');
+            return this.data.valuationData;
+        }
+
+        this.setLoadingState('valuationData', true);
+
+        try {
+            const response = await fetch('data/complex_valuation_analysis.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Process and enhance valuation data
+            const processedData = {
+                metadata: data.metadata || {},
+                complexPerformance: data.complex_performance || [],
+                countyStats: data.county_stats || [],
+                versionStats: data.version_stats || [],
+                sampleData: data.sample_data || []
+            };
+            
+            this.data.valuationData = processedData;
+            this.cache.set('valuationData', processedData);
+            this.notifySubscribers('valuationData', processedData);
+            
+            console.log('✅ 估值分析數據載入成功');
+            return processedData;
+        } catch (error) {
+            console.warn('⚠️ 估值分析數據載入失敗:', error);
+            // Return empty structure if loading fails
+            const emptyData = {
+                metadata: {},
+                complexPerformance: [],
+                countyStats: [],
+                versionStats: [],
+                sampleData: []
+            };
+            this.data.valuationData = emptyData;
+            return emptyData;
+        } finally {
+            this.setLoadingState('valuationData', false);
+        }
+    }
+
+    /**
+     * Get valuation performance for a specific complex
+     */
+    getComplexValuationPerformance(complexName) {
+        if (!this.data.valuationData || !this.data.valuationData.complexPerformance) {
+            return null;
+        }
+        
+        return this.data.valuationData.complexPerformance.find(
+            perf => perf.社區名稱 === complexName
+        );
+    }
+
+    /**
+     * Get valuation sample data for a specific complex
+     */
+    getComplexValuationData(complexName) {
+        if (!this.data.valuationData || !this.data.valuationData.sampleData) {
+            return [];
+        }
+        
+        return this.data.valuationData.sampleData.filter(
+            record => record.社區名稱 === complexName
+        ).sort((a, b) => {
+            if (a.交易年月 && b.交易年月) {
+                return a.交易年月.localeCompare(b.交易年月);
+            }
+            return a.版本 - b.版本;
+        });
+    }
+
+    /**
+     * Get valuation accuracy matrix for heatmap
+     */
+    getValuationAccuracyMatrix() {
+        if (!this.data.valuationData || !this.data.valuationData.sampleData) {
+            return [];
+        }
+        
+        const matrix = [];
+        const complexGroups = new Map();
+        
+        // Group by complex
+        this.data.valuationData.sampleData.forEach(record => {
+            const complexName = record.社區名稱;
+            if (!complexGroups.has(complexName)) {
+                complexGroups.set(complexName, new Map());
+            }
+            
+            const versionMap = complexGroups.get(complexName);
+            const version = record.版本;
+            
+            if (!versionMap.has(version)) {
+                versionMap.set(version, []);
+            }
+            
+            versionMap.get(version).push(record.準確度);
+        });
+        
+        // Create matrix entries
+        complexGroups.forEach((versionMap, complexName) => {
+            versionMap.forEach((accuracies, version) => {
+                const avgAccuracy = accuracies.reduce((sum, acc) => sum + acc, 0) / accuracies.length;
+                matrix.push({
+                    社區名稱: complexName,
+                    版本: version,
+                    準確度: avgAccuracy,
+                    數據筆數: accuracies.length
+                });
+            });
+        });
+        
+        return matrix;
+    }
+
+    /**
+     * Get valuation statistics summary
+     */
+    getValuationStatsSummary() {
+        if (!this.data.valuationData) {
+            return null;
+        }
+        
+        const performance = this.data.valuationData.complexPerformance || [];
+        const metadata = this.data.valuationData.metadata || {};
+        
+        if (performance.length === 0) {
+            return null;
+        }
+        
+        const accuracies = performance.map(p => p.平均準確度 || 0);
+        const avgAccuracy = accuracies.reduce((sum, acc) => sum + acc, 0) / accuracies.length;
+        const maxAccuracy = Math.max(...accuracies);
+        const minAccuracy = Math.min(...accuracies);
+        
+        // Find best and worst performing complexes
+        const bestComplex = performance.find(p => p.平均準確度 === maxAccuracy);
+        const worstComplex = performance.find(p => p.平均準確度 === minAccuracy);
+        
+        return {
+            totalComplexes: performance.length,
+            averageAccuracy: avgAccuracy,
+            maxAccuracy: maxAccuracy,
+            minAccuracy: minAccuracy,
+            bestComplex: bestComplex,
+            worstComplex: worstComplex,
+            metadata: metadata
+        };
     }
 }
