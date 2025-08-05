@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>社區估值誤差分析系統</title>
+    <title>社區估值誤差分析實驗</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -183,8 +183,8 @@
         <div class="container">
             <a class="navbar-brand" href="#" style="font-weight: 700; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">
                 <i class="fas fa-chart-area me-2" style="color: #fbbf24; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));"></i>
-                社區估值誤差分析系統
-                <small class="d-block" style="font-size: 0.7rem; opacity: 0.8; font-weight: 400;">Complex Valuation Error Analysis System</small>
+                社區估值誤差分析實驗
+                <small class="d-block" style="font-size: 0.7rem; opacity: 0.8; font-weight: 400;">Complex Valuation Error Analysis Experiment</small>
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="index.html" style="font-weight: 500;">
@@ -204,7 +204,7 @@
 
         <!-- 主要內容 -->
         <div id="mainContent" style="display: none;">
-            <!-- 系統摘要 -->
+            <!-- 實驗摘要 -->
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="summary-card text-center">
@@ -475,7 +475,7 @@
             }
 
             initializeUI() {
-                // 更新系統摘要
+                // 更新實驗摘要
                 const metadata = this.data.metadata;
                 document.getElementById('totalCounties').textContent = metadata.total_counties;
                 document.getElementById('totalComplexes').textContent = metadata.total_complexes;
