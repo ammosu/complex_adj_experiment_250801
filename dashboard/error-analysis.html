@@ -321,15 +321,6 @@
                                             <i class="fas fa-table me-1"></i>表格視圖
                                         </label>
                                     </div>
-                                    <!-- 表格操作按鈕 -->
-                                    <div class="btn-group btn-group-sm" role="group" id="tableControls" style="display: none;">
-                                        <button type="button" class="btn btn-outline-primary" onclick="toggleAllDetails(true)">
-                                            <i class="fas fa-expand-alt me-1"></i>展開全部
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary" onclick="toggleAllDetails(false)">
-                                            <i class="fas fa-compress-alt me-1"></i>收合全部
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -999,16 +990,13 @@
                 this.currentView = viewType;
                 const chartContainer = document.getElementById('chartContainer');
                 const tableContainer = document.getElementById('tableContainer');
-                const tableControls = document.getElementById('tableControls');
                 
                 if (viewType === 'chart') {
                     chartContainer.style.display = 'block';
                     tableContainer.style.display = 'none';
-                    tableControls.style.display = 'none';
                 } else {
                     chartContainer.style.display = 'none';
                     tableContainer.style.display = 'block';
-                    tableControls.style.display = 'flex';
                 }
             }
 
@@ -1487,25 +1475,6 @@
             document.getElementById(contentId).innerHTML = html;
         }
 
-        // 全域函數：切換所有詳細資料
-        function toggleAllDetails(expand) {
-            const expandableRows = document.querySelectorAll('.expandable-row');
-            expandableRows.forEach(row => {
-                if (expand) {
-                    row.classList.add('show');
-                    // 載入詳細數據
-                    const contentDiv = row.querySelector('[id^="detail-content-"]');
-                    if (contentDiv && !contentDiv.innerHTML) {
-                        const parts = contentDiv.id.split('-');
-                        if (parts.length >= 4) {
-                            loadTransactionDetails(parts[2], parts[3], contentDiv.id);
-                        }
-                    }
-                } else {
-                    row.classList.remove('show');
-                }
-            });
-        }
 
         // 啟動應用
         document.addEventListener('DOMContentLoaded', () => {
