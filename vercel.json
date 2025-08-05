@@ -14,7 +14,7 @@
     },
     {
       "src": "/",
-      "dest": "/dashboard/index_modern.html"
+      "dest": "/dashboard/index.html"
     }
   ]
 }

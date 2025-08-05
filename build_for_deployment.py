@@ -209,7 +209,7 @@ def create_static_config():
             },
             {
                 "src": "/",
-                "dest": "/dashboard/index_modern.html"
+                "dest": "/dashboard/index.html"
             }
         ]
     }
@@ -224,7 +224,7 @@ def create_static_config():
 
 [[redirects]]
   from = "/"
-  to = "/index_modern.html"
+  to = "/index.html"
   status = 200
 
 [[headers]]
@@ -412,7 +412,7 @@ def main():
     else:
         print("- 誤差分析數據: 未生成")
     
-    print("\n🌐 部署後訪問: /index_modern.html")
+    print("\n🌐 部署後訪問: /index.html")
 
 if __name__ == "__main__":
     main()

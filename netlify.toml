@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/"
-  to = "/index_modern.html"
+  to = "/index.html"
   status = 200
 
 [[headers]]
