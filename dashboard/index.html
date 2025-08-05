@@ -20,8 +20,9 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">
-                <i class="fas fa-chart-line me-2"></i>
-                社區調整率分析實驗
+                <i class="fas fa-analytics me-2"></i>
+                台灣住宅社區調整率分析平台
+                <small class="d-block" style="font-size: 0.7rem; opacity: 0.8; font-weight: 400;">Taiwan Housing Complex Adjustment Rate Analytics</small>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -29,25 +30,33 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link scroll-link" href="#kpi-section">總覽</a>
+                        <a class="nav-link scroll-link" href="#kpi-section">
+                            <i class="fas fa-tachometer-alt me-1"></i>總覽
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link scroll-link" href="#geographic-section">地理分析</a>
+                        <a class="nav-link scroll-link" href="#geographic-section">
+                            <i class="fas fa-map-marked-alt me-1"></i>地理分析
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link scroll-link" href="#trends-section">趨勢分析</a>
+                        <a class="nav-link scroll-link" href="#trends-section">
+                            <i class="fas fa-chart-line me-1"></i>趨勢分析
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link scroll-link" href="#search-section">社區搜尋</a>
+                        <a class="nav-link scroll-link" href="#search-section">
+                            <i class="fas fa-search-location me-1"></i>社區搜尋
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="error-analysis.html" target="_blank">
-                            <i class="fas fa-chart-bar me-1"></i>誤差分析
+                            <i class="fas fa-exclamation-triangle me-1"></i>誤差分析
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="calculation-info.html" target="_blank">
-                            <i class="fas fa-calculator me-1"></i>計算方法
+                            <i class="fas fa-square-root-alt me-1"></i>計算方法
                         </a>
                     </li>
                 </ul>
@@ -73,8 +82,9 @@
             <section id="kpi-section" class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">
-                        <i class="fas fa-chart-line me-2"></i>
-                        關鍵指標概覽
+                        <i class="fas fa-chart-pie me-2"></i>
+                        關鍵績效指標
+                        <span class="section-subtitle">Key Performance Indicators</span>
                     </h2>
                 </div>
                 <div class="row g-3" id="kpiCards">
@@ -86,8 +96,9 @@
             <section id="geographic-section" class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">
-                        <i class="fas fa-map-marked-alt me-2"></i>
+                        <i class="fas fa-globe-asia me-2"></i>
                         地理分布分析
+                        <span class="section-subtitle">Geographic Distribution Analysis</span>
                     </h2>
                     <div class="section-controls">
                         <div class="btn-group" role="group">
@@ -129,8 +140,9 @@
             <section id="trends-section" class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">
-                        <i class="fas fa-chart-area me-2"></i>
+                        <i class="fas fa-chart-line me-2"></i>
                         時間序列分析
+                        <span class="section-subtitle">Time Series Analysis</span>
                     </h2>
                     <div class="section-controls">
                         <select class="form-select form-select-sm" id="trendAnalysisType">
@@ -157,8 +169,9 @@
             <section id="search-section" class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">
-                        <i class="fas fa-search me-2"></i>
+                        <i class="fas fa-building me-2"></i>
                         社區搜尋與分析
+                        <span class="section-subtitle">Complex Search & Analysis</span>
                     </h2>
                 </div>
                 <div class="row g-3">
@@ -172,7 +185,8 @@
                                     <div class="mb-3">
                                         <label for="complexSearch" class="form-label">社區名稱</label>
                                         <input type="text" class="form-control" id="complexSearch" 
-                                               placeholder="輸入社區名稱進行搜尋...">
+                                               placeholder="輸入社區名稱，例如：頤海大院、文心匯..."
+                                               title="支援模糊搜尋，最多可顯示50個結果">
                                     </div>
                                     
                                     <div class="mb-3">
@@ -210,9 +224,17 @@
                             </div>
                             <div class="card-body">
                                 <div id="searchResults" class="search-results">
-                                    <div class="text-center text-muted py-5">
-                                        <i class="fas fa-search fa-3x mb-3"></i>
-                                        <p>請使用左側搜尋功能查找社區資料</p>
+                                    <div class="text-center py-5" style="color: var(--neutral-400);">
+                                        <div class="mb-4">
+                                            <i class="fas fa-building" style="font-size: 4rem; color: var(--neutral-300); margin-bottom: 1rem;"></i>
+                                        </div>
+                                        <h5 style="color: var(--neutral-600); margin-bottom: 0.5rem;">探索社區數據</h5>
+                                        <p style="color: var(--neutral-500); margin-bottom: 1.5rem;">使用左側搜尋功能開始分析台灣住宅社區調整率</p>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <span class="badge bg-light text-dark">33,000+ 社區</span>
+                                            <span class="badge bg-light text-dark">6 個模型版本</span>
+                                            <span class="badge bg-light text-dark">跨年度分析</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -225,8 +247,9 @@
             <section id="statistics-section" class="dashboard-section">
                 <div class="section-header">
                     <h2 class="section-title">
-                        <i class="fas fa-chart-bar me-2"></i>
+                        <i class="fas fa-calculator me-2"></i>
                         統計分析
+                        <span class="section-subtitle">Statistical Analysis</span>
                     </h2>
                 </div>
                 <div class="row g-3">
