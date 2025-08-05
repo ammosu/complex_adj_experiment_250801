@@ -432,7 +432,9 @@ class ModernDashboard {
      * Handle map mode change
      */
     handleMapModeChange(event) {
+        // Extract mode from ID: mapModeAbsolute -> absolute
         const mode = event.target.id.replace('mapMode', '').toLowerCase();
+        console.log('Map mode change requested:', mode);
         if (this.components.map) {
             this.components.map.setDisplayMode(mode);
         }

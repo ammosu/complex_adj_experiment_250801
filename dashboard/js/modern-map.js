@@ -34,6 +34,11 @@ class ModernMapManager {
             // Load and display Taiwan GeoJSON
             await this.loadTaiwanGeoJSON();
             
+            // Force initial color update for default mode
+            setTimeout(() => {
+                this.forceColorUpdate();
+            }, 500);
+            
             console.log('Taiwan map initialized successfully');
         } catch (error) {
             console.error('Error initializing map:', error);
@@ -53,14 +58,12 @@ class ModernMapManager {
 
             // Taiwan center coordinates
             const taiwanCenter = [23.8, 120.9];
-            const taiwanBounds = [[21.5, 119.3], [26.4, 122.0]];
 
             this.map = L.map(this.containerId, {
                 center: taiwanCenter,
                 zoom: 7,
-                minZoom: 6,
-                maxZoom: 10,
-                maxBounds: taiwanBounds,
+                minZoom: 4,  // Allow zooming out more
+                maxZoom: 12, // Allow zooming in more
                 scrollWheelZoom: true,
                 zoomControl: true
             });
@@ -541,6 +544,9 @@ class ModernMapManager {
                 min: Math.min(...validValues),
                 max: Math.max(...validValues)
             };
+            console.log(`Color scale updated for mode ${this.currentMode}:`, this.colorScale);
+        } else {
+            console.warn('No valid values found for color scale update');
         }
     }
 
@@ -617,6 +623,7 @@ class ModernMapManager {
      * Set display mode (absolute, relative, stability)
      */
     setDisplayMode(mode) {
+        console.log(`Setting display mode to: ${mode}`);
         if (this.currentMode === mode) return;
         
         this.currentMode = mode;
@@ -627,6 +634,20 @@ class ModernMapManager {
         }
 
         // Update legend
+        this.updateLegend();
+    }
+    
+    /**
+     * Force color update for initial load
+     */
+    forceColorUpdate() {
+        console.log('Force updating colors for initial load...');
+        this.updateColorScale();
+        
+        if (this.geoJsonLayer) {
+            this.geoJsonLayer.setStyle((feature) => this.getFeatureStyle(feature));
+        }
+        
         this.updateLegend();
     }
 
@@ -646,6 +667,30 @@ class ModernMapManager {
         legend.addTo(this.map);
         this.legendControl = legend;
 
+        // Add "回到台灣" button control
+        const homeControl = L.control({ position: 'topleft' });
+        
+        homeControl.onAdd = () => {
+            const div = L.DomUtil.create('div', 'map-home-control');
+            div.innerHTML = `
+                <button class="map-home-btn" title="回到台灣視圖">
+                    <i class="fas fa-home"></i>
+                </button>
+            `;
+            
+            // Prevent map events when clicking the button
+            L.DomEvent.disableClickPropagation(div);
+            
+            // Add click handler
+            div.querySelector('.map-home-btn').addEventListener('click', () => {
+                this.returnToTaiwan();
+            });
+            
+            return div;
+        };
+        
+        homeControl.addTo(this.map);
+
         // Add info control
         const info = L.control({ position: 'topright' });
         
@@ -653,7 +698,7 @@ class ModernMapManager {
             const div = L.DomUtil.create('div', 'map-info');
             div.innerHTML = `
                 <div class="map-info-content">
-                    <h6>台灣住宅社區調整率分析</h6>
+                    <h6>社區調整率分析實驗</h6>
                     <p class="text-muted small">點擊縣市查看詳細資訊</p>
                 </div>
             `;
@@ -662,12 +707,31 @@ class ModernMapManager {
         
         info.addTo(this.map);
     }
+    
+    /**
+     * Return map view to Taiwan
+     */
+    returnToTaiwan() {
+        const taiwanCenter = [23.8, 120.9];
+        this.map.setView(taiwanCenter, 7);
+        
+        // If geoJsonLayer exists, fit to its bounds
+        if (this.geoJsonLayer) {
+            const bounds = this.geoJsonLayer.getBounds();
+            if (bounds.isValid()) {
+                this.map.fitBounds(bounds, { padding: [20, 20] });
+            }
+        }
+    }
 
     /**
      * Update legend content
      */
     updateLegendContent(div) {
-        if (!this.colorScale) return;
+        if (!this.colorScale) {
+            console.warn('No color scale available for legend update');
+            return;
+        }
 
         const { min, max } = this.colorScale;
         const modeLabels = {
@@ -675,14 +739,24 @@ class ModernMapManager {
             'relative': '相對變化 (%)',
             'stability': '不穩定度'
         };
+        
+        // Format values based on mode
+        let minFormatted, maxFormatted;
+        if (this.currentMode === 'relative') {
+            minFormatted = (min * 100).toFixed(1) + '%';
+            maxFormatted = (max * 100).toFixed(1) + '%';
+        } else {
+            minFormatted = min.toFixed(3);
+            maxFormatted = max.toFixed(3);
+        }
 
         div.innerHTML = `
             <div class="legend-title">${modeLabels[this.currentMode] || '數值'}</div>
             <div class="legend-scale">
                 <div class="legend-color-bar"></div>
                 <div class="legend-labels">
-                    <span>${min.toFixed(3)}</span>
-                    <span>${max.toFixed(3)}</span>
+                    <span class="legend-min">${minFormatted}</span>
+                    <span class="legend-max">${maxFormatted}</span>
                 </div>
             </div>
         `;
@@ -778,26 +852,42 @@ const mapStyles = `
     padding: 15px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     font-size: 0.85em;
+    min-width: 180px;
+    max-width: 220px;
 }
 
 .legend-title {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: #333;
+    text-align: center;
+    font-size: 0.9em;
 }
 
 .legend-color-bar {
-    height: 10px;
+    height: 12px;
     background: linear-gradient(to right, #f7fbff, #08306b, #99000d);
-    border-radius: 5px;
-    margin-bottom: 5px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 .legend-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 0.8em;
+    font-size: 0.75em;
     color: #666;
+    line-height: 1.2;
+}
+
+.legend-labels .legend-min,
+.legend-labels .legend-max {
+    background: rgba(255,255,255,0.9);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 500;
+    border: 1px solid rgba(0,0,0,0.08);
+    white-space: nowrap;
 }
 
 .map-info {
@@ -821,6 +911,39 @@ const mapStyles = `
 
 .custom-popup .leaflet-popup-tip {
     background: white;
+}
+
+.map-home-control {
+    margin: 10px 10px;
+}
+
+.map-home-btn {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.map-home-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    color: #0d6efd;
+    transform: translateY(-1px);
+}
+
+.map-home-btn:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 </style>
 `;
